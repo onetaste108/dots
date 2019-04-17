@@ -10,11 +10,11 @@ void main() {
   float screen = u_resolution.x / u_resolution.y;
   float tex = u_texResolution.x / u_texResolution.y;
   vec2 pos = a_pos;
-  if (screen < tex) {
-    pos.y *= screen*tex;
-  } else if (screen > tex){
-    pos.x /= screen*tex;
-  }
+  // if (screen < tex) {
+  //   pos.y *= screen*tex;
+  // } else if (screen > tex){
+  //   pos.x /= screen*tex;
+  // }
   gl_Position = vec4(pos * vec2(1.0, flip), 0, 1);
   v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
 }
