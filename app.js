@@ -291,9 +291,9 @@ cv['onRuntimeInitialized'] = () => {
     }
     // HSV
     applyFilter(3);
-    drawCurrent();
     // TRESHOLD
     applyFilter(4);
+    drawCurrent();
     // ERODE & DILATE
     applyFilter(5);
     applyFilter(6);
@@ -309,7 +309,7 @@ cv['onRuntimeInitialized'] = () => {
       blobs[i].location.y /= mask_size.h;
     }
 
-    ctx.clearRect(0,0,screen_size.x, screen_size.y);
+    ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
     // cv.imshow("cv", gray);
     drawBlobs(blobs);
 
