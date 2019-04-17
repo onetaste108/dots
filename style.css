@@ -1,0 +1,52 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+  overflow: hidden;
+}
+
+#video {
+  visibility: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+#canvas, #cv {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+}
+
+#loadscreen {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+#controls {
+  /* position: absolute; */
+  height: 100%;
+  width: 80%;
+  top: 0;
+  left: 0;
+  margin: 10%;
+  /* background-color: gray; */
+}
+
+#loadcircle {
+  position: absolute;
+  top:50%;
+  left:50%;
+  width:128px;
+  height:128px;
+  margin-top: -64px;
+  margin-left: -64px;
+}
+
+/* .slider, .slidertxt {
+  visibility: hidden;
+} */
