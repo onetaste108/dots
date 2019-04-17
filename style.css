@@ -7,6 +7,8 @@ html, body {
 }
 
 #video {
+	top:0;
+	left:0;
   visibility: hidden;
   position: fixed;
   width: 100%;
@@ -14,6 +16,8 @@ html, body {
 }
 
 #canvas, #cv {
+	top:0;
+	left:0;
     position: fixed;
     height: 100%;
     width: 100%;
@@ -28,13 +32,11 @@ html, body {
 }
 
 #controls {
-  /* position: absolute; */
+	position: fixed;
   height: 100%;
-  width: 80%;
+  width: 100%;
   top: 0;
   left: 0;
-  margin: 10%;
-  /* background-color: gray; */
 }
 
 #loadcircle {
@@ -47,6 +49,40 @@ html, body {
   margin-left: -64px;
 }
 
-/* .slider, .slidertxt {
-  visibility: hidden;
-} */
+.slider, .slidertext {
+  /* visibility: hidden; */
+	position: absolute;
+	width: 100%;
+	margin: 0;
+}
+
+.sliderdiv {
+	position: relative;
+	width: 100%;
+	margin-top: 10px;
+	height: 25px;
+}
+.slidertext {
+	/* position: relative; */
+	/* top: 25px; */
+	z-index: 1;
+	font-family: Courier;
+	font-weight: bold;
+	pointer-events : none;
+}
+
+.slider {
+	-webkit-appearance: none;  /* Override default CSS styles */
+	appearance: none;
+	height: 100%px;
+	opacity: 0.5;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: yellow; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}

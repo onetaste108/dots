@@ -18,6 +18,48 @@
       <img id="loadcircle" src="data/load.gif" alt="loading"></img>
     </div>
 
+    <div class="controls">
+      <div class="sliderdiv">
+        <p class="slidertext">Hue Low <span id="thl"></span></p>
+        <input type="range" class="slider" id="shl" min="0" max="1" step="0.01">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Hue High <span id="thu"></span></p>
+        <input type="range" class="slider" id="shu" min="0" max="1" step="0.01">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Saturation Low <span id="tsl"></span></p>
+        <input type="range" class="slider" id="ssl" min="0" max="1" step="0.01">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Saturation High <span id="tsu"></span></p>
+        <input type="range" class="slider" id="ssu" min="0" max="1" step="0.01">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Value Low <span id="tvl"></span></p>
+        <input type="range" class="slider" id="svl" min="0" max="1" step="0.01">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Value High <span id="tvu"></span></p>
+        <input type="range" class="slider" id="svu" min="0" max="1" step="0.01">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Blur <span id="tb"></span></p>
+        <input type="range" class="slider" id="sb" min="0" max="20" step="1">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Erode <span id="te"></span></p>
+        <input type="range" class="slider" id="se" min="0" max="20" step="1">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Display <span id="td"></span></p>
+        <input type="range" class="slider" id="sd" min="0" max="4" step="1">
+      </div>
+
+    </div>
+
     <script src="js/opencv.js"></script>
     <script src="js/SimpleBlobDetector.js"></script>
     <script src="app.js"></script>

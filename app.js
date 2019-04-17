@@ -3,9 +3,19 @@ precision mediump float;
 attribute vec2 a_pos;
 attribute vec2 a_texCoord;
 varying vec2 v_texCoord;
+uniform vec2 u_resolution;
+uniform vec2 u_texResolution;
 uniform float flip;
 void main() {
-  gl_Position = vec4(a_pos * vec2(1.0, flip), 0, 1);
+  float screen = u_resolution.x / u_resolution.y;
+  float tex = u_texResolution.x / u_texResolution.y;
+  vec2 pos = a_pos;
+  if (screen < tex) {
+    pos.y *= screen*tex;
+  } else if (screen > tex){
+    pos.x /= screen*tex;
+  }
+  gl_Position = vec4(pos * vec2(1.0, flip), 0, 1);
   v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
 }
 `;
@@ -129,15 +139,72 @@ void main() {
 var params = {
   max_size: 720,
 
-  blur: 9,
-
-  hl: 0,
-  hu: 0.5,
+  hl: 0.0,
+  hu: 0.6,
   sl: 0.5,
   su: 1,
   vl: 0.5,
-  vu: 1
+  vu: 1,
+
+  e: 1,
+  b: 1,
+
+  d: 0
 };
+
+var shl = document.getElementById("shl");
+var thl = document.getElementById("thl");
+var shu = document.getElementById("shu");
+var thu = document.getElementById("thu");
+var ssl = document.getElementById("ssl");
+var tsl = document.getElementById("tsl");
+var ssu = document.getElementById("ssu");
+var tsu = document.getElementById("tsu");
+var svl = document.getElementById("svl");
+var tvl = document.getElementById("tvl");
+var svu = document.getElementById("svu");
+var tvu = document.getElementById("tvu");
+
+var sb = document.getElementById("sb");
+var tb = document.getElementById("tb");
+
+var se = document.getElementById("se");
+var te = document.getElementById("te");
+
+var sd = document.getElementById("sd");
+var td = document.getElementById("td");
+
+function update_sliders() {
+  thl.innerHTML = shl.value;
+  params["hl"] = shl.value;
+
+  thu.innerHTML = shu.value;
+  params["hu"] = shu.value;
+
+  tsl.innerHTML = ssl.value;
+  params["sl"] = ssl.value;
+
+  tsu.innerHTML = ssu.value;
+  params["su"] = ssu.value;
+
+  tvl.innerHTML = svl.value;
+  params["vl"] = svl.value;
+
+  tvu.innerHTML = svu.value;
+  params["vu"] = svu.value;
+
+
+  tb.innerHTML = sb.value;
+  params["b"] = sb.value;
+
+  te.innerHTML = se.value;
+  params["e"] = se.value;
+
+
+  td.innerHTML = sd.value;
+  params["d"] = sd.value;
+
+}
 
 var video = document.querySelector("#video");
 window.onload = function() {
@@ -270,6 +337,7 @@ cv['onRuntimeInitialized'] = () => {
   };
 
   function draw() {
+    update_sliders();
     fboIndex = 0;
     twgl.setUniforms(programInfo, {
       u_resolution: [screen_size.w, screen_size.h],
@@ -281,22 +349,41 @@ cv['onRuntimeInitialized'] = () => {
 
     twgl.setTextureFromElement(gl, texture, video, {level:0});
 
+    twgl.setUniforms(programInfo, {
+      u_texResolution: [video.videoWidth, video.videoHeight]
+    });
+
     twgl.bindFramebufferInfo(gl, fbi2);
     twgl.setUniforms(programInfo, { u_tex: texture, mode: 0});
     twgl.drawBufferInfo(gl, bufferInfo);
 
+
+    twgl.setUniforms(programInfo, {
+      u_texResolution: [screen_size.w, screen_size.h]
+    });
+
+    if (params.d == 0) drawCurrent();
     // BLUR
-    for (var i = 0; i < params.blur; i++) {
+    for (var i = 0; i < params.b; i++) {
       applyFilter(2);
     }
+    if (params.d == 1) drawCurrent();
+
     // HSV
     applyFilter(3);
+    if (params.d == 2) drawCurrent();
+
     // TRESHOLD
     applyFilter(4);
-    drawCurrent();
+    if (params.d == 3) drawCurrent();
+
     // ERODE & DILATE
-    applyFilter(5);
-    applyFilter(6);
+    for (var i = 0; i < params.e; i++) {
+      applyFilter(5);
+      applyFilter(6);
+    }
+    if (params.d == 4) drawCurrent();
+
 
 
     var pixels = grabPixels();
