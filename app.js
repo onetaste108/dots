@@ -80,7 +80,7 @@ vec4 conv25(sampler2D tex, vec2 pos, float k[25], vec2 res) {
 
 float test(float x, float l, float u) {
   float y = 0.0;
-  if (x > l && x < u) {
+  if (x >= l && x <= u) {
       y = 1.0;
   }
   return y;
@@ -136,7 +136,7 @@ vec4 dilate(sampler2D tex, vec2 pos, vec2 res) {
 void main() {
   vec4 color;
   if (mode == 0) {
-    color = texture2D(u_tex, v_texCoord);
+    color = vec4(texture2D(u_tex, v_texCoord).rgb, 1.0);
   } else if (mode == 1) {
     color = conv9(u_tex, v_texCoord, u_kernel9, u_resolution);
   } else if (mode == 2) {
@@ -155,8 +155,10 @@ void main() {
   gl_FragColor = color;
 }
 `;
+
+test_points = [];
 var o_pins = [
-	[-0.6050941780821918, -0.8544921875, 0.5203874143835616, -0.52734375, 0.5993685787671232, 0.8515625, -0.4414903375733855, 0.8515625],
+	[-0.6689280868385346, -0.7724609375, -0.4328358208955224, 0.853515625, 0.6689280868385346, 0.771484375, 0.5115332428765265, -0.52734375],
   [-0.9661509295499021, -0.6015625, 0.809514891144814, -0.431640625, 0.72630259295499, 0.4267578125, -0.8857593872309197, 0.5966796875],
   [-0.8242853338068181, -0.7041015625, 0.8240855823863635, -0.5283203125, 0.7334391276041665, 0.365234375, -0.5676861387310606, 0.5400390625],
   [-0.7378225615530303, -0.9462890625, -0.6164957682291667, -0.9462890625, 0.7390173709753787, 0.9423828125, 0.24673739346590917, 0.9423828125],
@@ -227,7 +229,7 @@ window.onload = function() {
 			video.srcObject = stream;
 		}).catch(function(error) {
 					video = new Image;
-          video.src = "data/test1.jpg";
+          video.src = "data/2.png";
 			});
 }
 
@@ -251,8 +253,6 @@ cv['onRuntimeInitialized'] = () => {
   gl.useProgram(programInfo.program);
   twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
-  img = new Image();
-  img.src = "data/test1.jpg";
 
   var screen_size = {w: canvas.clientWidth, h: canvas.clientHeight};
   canvas.width = screen_size.w;
@@ -262,10 +262,10 @@ cv['onRuntimeInitialized'] = () => {
   var mask_ratio = Math.min(params.max_size, Math.max(screen_size.w, screen_size.h)) / Math.max(screen_size.w, screen_size.h);
   var mask_size = {w: Math.round(screen_size.w * mask_ratio), h: Math.round(screen_size.h * mask_ratio)};
 
-  var posterTex1 = twgl.createTexture(gl, {width: 1, height: 1});
-  var posterTex2 = twgl.createTexture(gl, {width: 1, height: 1});
-  var posterTex3 = twgl.createTexture(gl, {width: 1, height: 1});
-  var posterTex4 = twgl.createTexture(gl, {width: 1, height: 1});
+  var posterTex1 = twgl.createTexture(gl, {width: 10, height: 10});
+  var posterTex2 = twgl.createTexture(gl, {width: 10, height: 10});
+  var posterTex3 = twgl.createTexture(gl, {width: 10, height: 10});
+  var posterTex4 = twgl.createTexture(gl, {width: 10, height: 10});
 
   posterTextures = [posterTex1, posterTex2, posterTex3, posterTex4];
 
@@ -306,7 +306,7 @@ cv['onRuntimeInitialized'] = () => {
   function applyFilter(n) {
     fboIndex_next = (fboIndex+1)%2;
     twgl.bindFramebufferInfo(gl, fbis[fboIndex_next]);
-    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], mode: n});
+    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], mode: n, flip: 1});
     twgl.drawBufferInfo(gl, bufferInfo);
     fboIndex = fboIndex_next;
   }
@@ -456,10 +456,11 @@ cv['onRuntimeInitialized'] = () => {
       corners = detectCorners(blobs, posterINDEX);
       fillBlobs(corners,"red");
       var origin = o_pins[posterINDEX-1];
-      var trans = [corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y, corners[1-1].x, corners[1-1].y];
+      var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
       for (var i = 0; i < trans.length; i++) {
         trans[i] = trans[i]*2-1;
       }
+      test_points = trans;
       var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
       var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
     	var tmat = cv.getPerspectiveTransform(mat1, mat2);
@@ -467,7 +468,7 @@ cv['onRuntimeInitialized'] = () => {
     	mat1.delete()
     	mat2.delete();
     	tmat.delete();
-      drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
+      // drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
     }
 
     requestAnimationFrame(draw);
@@ -508,6 +509,15 @@ function detectCorners(blobs, pId) {
   }
   return [blobs[cInds[0]], blobs[cInds[1]], blobs[cInds[2]], blobs[cInds[3]]];
 }
+
+
+
+
+
+
+
+
+
 
 function posterId(blobs) {
   var postern = 0;
