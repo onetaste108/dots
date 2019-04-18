@@ -149,15 +149,17 @@ void main() {
     color = erode(u_tex, v_texCoord, u_resolution);
   } else if (mode == 6) {
     color = dilate(u_tex, v_texCoord, u_resolution);
+  } else if (mode == 100) {
+    color = texture2D(u_tex, v_texCoord);
   }
   gl_FragColor = color;
 }
 `;
 var o_pins = [
 	[-0.6050941780821918, -0.8544921875, 0.5203874143835616, -0.52734375, 0.5993685787671232, 0.8515625, -0.4414903375733855, 0.8515625],
-	[-0.9661509295499021, -0.6015625, 0.809514891144814, -0.431640625, 0.72630259295499, 0.4267578125, -0.8857593872309197, 0.5966796875],
-	[-0.8242853338068181, -0.7041015625, 0.8240855823863635, -0.5283203125, 0.7334391276041665, 0.365234375, -0.5676861387310606, 0.5400390625],
-	[-0.7378225615530303, -0.9462890625, -0.6164957682291667, -0.9462890625, 0.7390173709753787, 0.9423828125, 0.24673739346590917, 0.9423828125]
+  [-0.9661509295499021, -0.6015625, 0.809514891144814, -0.431640625, 0.72630259295499, 0.4267578125, -0.8857593872309197, 0.5966796875],
+  [-0.8242853338068181, -0.7041015625, 0.8240855823863635, -0.5283203125, 0.7334391276041665, 0.365234375, -0.5676861387310606, 0.5400390625],
+  [-0.7378225615530303, -0.9462890625, -0.6164957682291667, -0.9462890625, 0.7390173709753787, 0.9423828125, 0.24673739346590917, 0.9423828125],
 ]
 
 var params = {
@@ -259,6 +261,26 @@ cv['onRuntimeInitialized'] = () => {
   cv_canvas.height = screen_size.h;
   var mask_ratio = Math.min(params.max_size, Math.max(screen_size.w, screen_size.h)) / Math.max(screen_size.w, screen_size.h);
   var mask_size = {w: Math.round(screen_size.w * mask_ratio), h: Math.round(screen_size.h * mask_ratio)};
+
+  var posterTex1 = twgl.createTexture(gl, {width: 1, height: 1});
+  var posterTex2 = twgl.createTexture(gl, {width: 1, height: 1});
+  var posterTex3 = twgl.createTexture(gl, {width: 1, height: 1});
+  var posterTex4 = twgl.createTexture(gl, {width: 1, height: 1});
+
+  posterTextures = [posterTex1, posterTex2, posterTex3, posterTex4];
+
+  var posterImg1 = new Image();
+  posterImg1.src = "data/1.1.png";
+  posterImg1.onload = () => { twgl.setTextureFromElement(gl, posterTex1, posterImg1); };
+  var posterImg2 = new Image();
+  posterImg2.src = "data/2.1.png";
+  posterImg2.onload = () => { twgl.setTextureFromElement(gl, posterTex2, posterImg2); };
+  var posterImg3 = new Image();
+  posterImg3.src = "data/3.1.png";
+  posterImg3.onload = () => { twgl.setTextureFromElement(gl, posterTex3, posterImg3); };
+  var posterImg4 = new Image();
+  posterImg4.src = "data/4.1.png";
+  posterImg4.onload = () => { twgl.setTextureFromElement(gl, posterTex4, posterImg4); };
 
   var texture = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
   var texture2 = twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h});
@@ -430,11 +452,11 @@ cv['onRuntimeInitialized'] = () => {
     gray.delete()
     drawBlobs(blobs,"yellow");
     if (blobs.length > 0) {
-      corners = detectCorners(blobs);
+      var posterINDEX = posterId(blobs)
+      corners = detectCorners(blobs, posterINDEX);
       fillBlobs(corners,"red");
-
-      var origin = o_pins[posterId(blobs)-1];
-      var trans = [corners[1-1].x, corners[1-1].y, corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+      var origin = o_pins[posterINDEX-1];
+      var trans = [corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y, corners[1-1].x, corners[1-1].y];
       for (var i = 0; i < trans.length; i++) {
         trans[i] = trans[i]*2-1;
       }
@@ -445,7 +467,7 @@ cv['onRuntimeInitialized'] = () => {
     	mat1.delete()
     	mat2.delete();
     	tmat.delete();
-      drawPoster(tmat_arr, texture);
+      drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
     }
 
     requestAnimationFrame(draw);
@@ -455,8 +477,7 @@ cv['onRuntimeInitialized'] = () => {
 
 };
 
-function detectCorners(blobs) {
-  var pId = posterId(blobs);
+function detectCorners(blobs, pId) {
   var cVals = [10000,10000,10000,10000];
   var cInds = [0,0,0,0];
   for (var i = 0; i < blobs.length; i++) {
@@ -491,13 +512,13 @@ function detectCorners(blobs) {
 function posterId(blobs) {
   var postern = 0;
 	if (blobs.length < 10) {
-		postern = 4;
-	} else if (blobs.length < 24) {
-		postern = 3;
-	} else if (blobs.length < 35) {
-		postern = 2;
-	} else if (blobs.length > 3) {
 		postern = 1;
+	} else if (blobs.length < 24) {
+		postern = 2;
+	} else if (blobs.length < 35) {
+		postern = 3;
+	} else if (blobs.length > 3) {
+		postern = 4;
 	}
   return postern;
 }
