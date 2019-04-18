@@ -132,7 +132,7 @@ void main() {
 `;
 
 var params = {
-  max_size: 720,
+  max_size: 1024,
 
   hl: 0.0,
   hu: 0.6,
@@ -144,61 +144,37 @@ var params = {
   e: 1,
   b: 1,
 
-  d: 0
+  d: 0,
+
+  mina: 0,
+  maxa: 10000,
 };
 
-var shl = document.getElementById("shl");
-var thl = document.getElementById("thl");
-var shu = document.getElementById("shu");
-var thu = document.getElementById("thu");
-var ssl = document.getElementById("ssl");
-var tsl = document.getElementById("tsl");
-var ssu = document.getElementById("ssu");
-var tsu = document.getElementById("tsu");
-var svl = document.getElementById("svl");
-var tvl = document.getElementById("tvl");
-var svu = document.getElementById("svu");
-var tvu = document.getElementById("tvu");
+var isSettings = false;
+var settingsElm = document.getElementById("controls");
 
-var sb = document.getElementById("sb");
-var tb = document.getElementById("tb");
+function toggle_settings() {
+  isSettings = !isSettings;
+  if (isSettings) {
+    settingsElm.style.visibility = "visible";
+  } else {
+    settingsElm.style.visibility = "hidden";
+  }
+}
 
-var se = document.getElementById("se");
-var te = document.getElementById("te");
-
-var sd = document.getElementById("sd");
-var td = document.getElementById("td");
-
+var sliders = document.getElementsByClassName("slider");
+var slidertexts = document.getElementsByClassName("sliderspan");
 function update_sliders() {
-  thl.innerHTML = shl.value;
-  params["hl"] = shl.value;
-
-  thu.innerHTML = shu.value;
-  params["hu"] = shu.value;
-
-  tsl.innerHTML = ssl.value;
-  params["sl"] = ssl.value;
-
-  tsu.innerHTML = ssu.value;
-  params["su"] = ssu.value;
-
-  tvl.innerHTML = svl.value;
-  params["vl"] = svl.value;
-
-  tvu.innerHTML = svu.value;
-  params["vu"] = svu.value;
-
-
-  tb.innerHTML = sb.value;
-  params["b"] = sb.value;
-
-  te.innerHTML = se.value;
-  params["e"] = se.value;
-
-
-  td.innerHTML = sd.value;
-  params["d"] = sd.value;
-
+  for (var i = 0; i < sliders.length; i++) {
+    sliders[i].value = params[sliders[i].id];
+    slidertexts[i].innerHTML = sliders[i].value;
+  }
+}
+update_sliders();
+function slider_change(event) {
+  var me = event.target;
+  document.getElementById("t"+me.id).innerHTML = me.value;
+  params[me.id] = me.value;
 }
 
 var video = document.querySelector("#video");
@@ -214,7 +190,8 @@ window.onload = function() {
 			track = stream.getTracks()[0];
 			video.srcObject = stream;
 		}).catch(function(error) {
-					video.src = "data/test.mov";
+					video = new Image;
+          video.src = "data/test1.jpg";
 			});
 }
 
@@ -299,40 +276,40 @@ cv['onRuntimeInitialized'] = () => {
 
   function drawBlobs(blobs) {
     for (var i = 0; i < blobs.length; i++) {
-      ctx.strokeStyle = "green";
-      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius, blobs[i].location.y*screen_size.h-blobs[i].radius, blobs[i].radius*2, blobs[i].radius*2);
+      ctx.strokeStyle = "black";
+      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w-1, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w-1, blobs[i].radius*2*screen_size.w+2, blobs[i].radius*2*screen_size.w+2);
+      ctx.strokeStyle = "yellow";
+      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w, blobs[i].radius*2*screen_size.w, blobs[i].radius*2*screen_size.w);
+      ctx.strokeStyle = "black";
+      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w+1, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w+1, blobs[i].radius*2*screen_size.w-2, blobs[i].radius*2*screen_size.w-2);
     }
   }
 
-  var blobParams = {
-    thresholdStep: 1000,
-    minThreshold: 200,
-    maxThreshold: 256,
-
-    filterByColor: true,
-    blobColor: 255,
-
-    filterByArea: false,
-    minArea: 25,
-    maxArea: 5000,
-
-    filterByCircularity: false,
-    minCircularity: 0.8,
-    maxCircularity: 1000000,
-
-    filterByInertia: false,
-    minInertiaRatio: 0.1,
-    maxInertiaRatio: 1000000,
-
-    filterByConvexity: false,
-    minConvexity: 0.95,
-    maxConvexity: 1000000,
-
-    faster: true
-  };
 
   function draw() {
-    update_sliders();
+    var blobParams = {
+      thresholdStep: 1000,
+      minThreshold: 200,
+      maxThreshold: 256,
+
+      filterByColor: true,
+      blobColor: 255,
+
+      filterByArea: true,
+      minArea: params["mina"],
+      maxArea: params["maxa"],
+
+      filterByCircularity: false,
+
+
+      filterByInertia: false,
+
+
+      filterByConvexity: false,
+
+
+      faster: true
+    };
     fboIndex = 0;
     twgl.setUniforms(programInfo, {
       u_resolution: [screen_size.w, screen_size.h],
@@ -389,6 +366,7 @@ cv['onRuntimeInitialized'] = () => {
     for (var i = 0; i < blobs.length; i++) {
       blobs[i].location.x /= mask_size.w;
       blobs[i].location.y /= mask_size.h;
+      blobs[i].radius /= mask_size.w;
     }
 
     ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);

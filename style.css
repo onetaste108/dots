@@ -74,7 +74,7 @@ html, body {
 .slider {
 	-webkit-appearance: none;  /* Override default CSS styles */
 	appearance: none;
-	height: 100%px;
+	height: 100%;
 	opacity: 0.5;
 }
 
@@ -85,4 +85,36 @@ html, body {
   height: 25px; /* Slider handle height */
   background: yellow; /* Green background */
   cursor: pointer; /* Cursor on hover */
+}
+
+#hl::-webkit-slider-thumb {
+  background: red; /* Green background */
+}
+#hu::-webkit-slider-thumb {
+  background: red; /* Green background */
+}
+#sl::-webkit-slider-thumb {
+  background: green; /* Green background */
+}
+#su::-webkit-slider-thumb {
+  background: green; /* Green background */
+}
+#vl::-webkit-slider-thumb {
+  background: blue; /* Green background */
+}
+#vu::-webkit-slider-thumb {
+  background: blue; /* Green background */
+}
+
+#d::-webkit-slider-thumb {
+  background: black; /* Green background */
+}
+
+#settings {
+	position: fixed;
+	color: yellow;
+	width: 10%;
+	right: 10px;
+	top: 10px;
+	cursor: pointer;
 }

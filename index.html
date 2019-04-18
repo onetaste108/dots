@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ahh</title>
+    <script type="text/javascript">
+      var loading_image = new Image();
+      loading_image.src = "data/load.gif";
+    </script>
     <script src="js/twgl-full.min.js"></script>
-    <script src="js/nouislider.js"></script>
     <link rel="stylesheet" href="style.css">
   </head>
 
@@ -18,47 +21,69 @@
       <img id="loadcircle" src="data/load.gif" alt="loading"></img>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="controls">
       <div class="sliderdiv">
-        <p class="slidertext">Hue Low <span id="thl"></span></p>
-        <input type="range" class="slider" id="shl" min="0" max="1" step="0.01">
+        <p class="slidertext">Hue Low <span class="sliderspan" id="thl"></span></p>
+        <input type="range" class="slider" id="hl" min="0" max="1" step="0.01" oninput="slider_change(event);">
       </div>
       <div class="sliderdiv">
-        <p class="slidertext">Hue High <span id="thu"></span></p>
-        <input type="range" class="slider" id="shu" min="0" max="1" step="0.01">
+        <p class="slidertext">Hue High <span class="sliderspan" id="thu"></span></p>
+        <input type="range" class="slider" id="hu" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
       <div class="sliderdiv">
-        <p class="slidertext">Saturation Low <span id="tsl"></span></p>
-        <input type="range" class="slider" id="ssl" min="0" max="1" step="0.01">
+        <p class="slidertext">Saturation Low <span class="sliderspan" id="tsl"></span></p>
+        <input type="range" class="slider" id="sl" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
       <div class="sliderdiv">
-        <p class="slidertext">Saturation High <span id="tsu"></span></p>
-        <input type="range" class="slider" id="ssu" min="0" max="1" step="0.01">
+        <p class="slidertext">Saturation High <span class="sliderspan" id="tsu"></span></p>
+        <input type="range" class="slider" id="su" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
       <div class="sliderdiv">
-        <p class="slidertext">Value Low <span id="tvl"></span></p>
-        <input type="range" class="slider" id="svl" min="0" max="1" step="0.01">
+        <p class="slidertext">Value Low <span class="sliderspan" id="tvl"></span></p>
+        <input type="range" class="slider" id="vl" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
       <div class="sliderdiv">
-        <p class="slidertext">Value High <span id="tvu"></span></p>
-        <input type="range" class="slider" id="svu" min="0" max="1" step="0.01">
-      </div>
-
-      <div class="sliderdiv">
-        <p class="slidertext">Blur <span id="tb"></span></p>
-        <input type="range" class="slider" id="sb" min="0" max="20" step="1">
-      </div>
-      <div class="sliderdiv">
-        <p class="slidertext">Erode <span id="te"></span></p>
-        <input type="range" class="slider" id="se" min="0" max="20" step="1">
+        <p class="slidertext">Value High <span class="sliderspan" id="tvu"></span></p>
+        <input type="range" class="slider" id="vu" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
 
       <div class="sliderdiv">
-        <p class="slidertext">Display <span id="td"></span></p>
-        <input type="range" class="slider" id="sd" min="0" max="4" step="1">
+        <p class="slidertext">Blur <span class="sliderspan" id="tb"></span></p>
+        <input type="range" class="slider" id="b" min="0" max="20" step="1"  oninput="slider_change(event);">
+      </div>
+      <div class="sliderdiv">
+        <p class="slidertext">Erode <span class="sliderspan" id="te"></span></p>
+        <input type="range" class="slider" id="e" min="0" max="20" step="1"  oninput="slider_change(event);">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Display <span class="sliderspan" id="td"></span></p>
+        <input type="range" class="slider" id="d" min="0" max="4" step="1"  oninput="slider_change(event);">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Min Area <span class="sliderspan" id="tmina"></span></p>
+        <input type="range" class="slider" id="mina" min="0" max="1000" step="1"  oninput="slider_change(event);">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Max Area <span class="sliderspan" id="tmaxa"></span></p>
+        <input type="range" class="slider" id="maxa" min="0" max="1000" step="1"  oninput="slider_change(event);">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Min Circle <span class="sliderspan" id="tminc"></span></p>
+        <input type="range" class="slider" id="minc" min="0" max="1" step="0.01"  oninput="slider_change(event);">
+      </div>
+
+      <div class="sliderdiv">
+        <p class="slidertext">Max Circle <span class="sliderspan" id="tmaxc"></span></p>
+        <input type="range" class="slider" id="maxc" min="0" max="1" step="0.01"  oninput="slider_change(event);">
       </div>
 
     </div>
+
+    <img id="settings" src="data/gear_icon.svg" onclick="toggle_settings();"></img>
 
     <script src="js/opencv.js"></script>
     <script src="js/SimpleBlobDetector.js"></script>
