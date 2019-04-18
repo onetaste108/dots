@@ -1,21 +1,44 @@
 vs = `
 precision mediump float;
+precision mediump int;
+
 attribute vec2 a_pos;
 attribute vec2 a_texCoord;
 varying vec2 v_texCoord;
 uniform vec2 u_resolution;
 uniform vec2 u_texResolution;
 uniform float flip;
+uniform int mode;
+uniform mat3 u_tmat;
+
+mat3 transpose(mat3 inMatrix) {
+    vec3 i0 = inMatrix[0];
+    vec3 i1 = inMatrix[1];
+    vec3 i2 = inMatrix[2];
+    highp mat3 outMatrix = mat3(
+                 vec3(i0.x, i1.x, i2.x),
+                 vec3(i0.y, i1.y, i2.y),
+                 vec3(i0.z, i1.z, i2.z)
+                 );
+    return outMatrix;
+}
+
 void main() {
-  float screen = u_resolution.x / u_resolution.y;
-  float tex = u_texResolution.x / u_texResolution.y;
   vec2 pos = a_pos;
-  gl_Position = vec4(pos * vec2(1.0, flip), 0, 1);
-  v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
+  if (mode != 100) {
+    gl_Position = vec4(pos * vec2(1.0, flip), 0, 1);
+    v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
+  } else {
+    mat3 trans2 = transpose(u_tmat);
+    vec3 n_pos = trans2*vec3(pos,1);
+    gl_Position = vec4(n_pos.x,-n_pos.y,0,n_pos.z);
+    v_texCoord = vec2(a_texCoord.x, 1.0-a_texCoord.y);
+  }
 }
 `;
 fs = `
 precision mediump float;
+precision mediump int;
 uniform sampler2D u_tex;
 uniform vec2 u_resolution;
 uniform int mode;
@@ -130,6 +153,12 @@ void main() {
   gl_FragColor = color;
 }
 `;
+var o_pins = [
+	[-0.6050941780821918, -0.8544921875, 0.5203874143835616, -0.52734375, 0.5993685787671232, 0.8515625, -0.4414903375733855, 0.8515625],
+	[-0.9661509295499021, -0.6015625, 0.809514891144814, -0.431640625, 0.72630259295499, 0.4267578125, -0.8857593872309197, 0.5966796875],
+	[-0.8242853338068181, -0.7041015625, 0.8240855823863635, -0.5283203125, 0.7334391276041665, 0.365234375, -0.5676861387310606, 0.5400390625],
+	[-0.7378225615530303, -0.9462890625, -0.6164957682291667, -0.9462890625, 0.7390173709753787, 0.9423828125, 0.24673739346590917, 0.9423828125]
+]
 
 var params = {
   max_size: 1024,
@@ -228,7 +257,7 @@ cv['onRuntimeInitialized'] = () => {
   canvas.height = screen_size.h;
   cv_canvas.width = screen_size.w;
   cv_canvas.height = screen_size.h;
-  var mask_ratio = params.max_size / Math.max(screen_size.w, screen_size.h);
+  var mask_ratio = Math.min(params.max_size, Math.max(screen_size.w, screen_size.h)) / Math.max(screen_size.w, screen_size.h);
   var mask_size = {w: Math.round(screen_size.w * mask_ratio), h: Math.round(screen_size.h * mask_ratio)};
 
   var texture = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
@@ -267,6 +296,12 @@ cv['onRuntimeInitialized'] = () => {
     twgl.setUniforms(programInfo, { flip: 1 });
   }
 
+  function drawPoster(matrix, poster) {
+    twgl.bindFramebufferInfo(gl);
+    twgl.setUniforms(programInfo, { u_tex: poster, flip: 1, mode: 100, u_tmat: matrix});
+    twgl.drawBufferInfo(gl, bufferInfo);
+  }
+
   function grabPixels() {
     var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
     gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
@@ -274,14 +309,20 @@ cv['onRuntimeInitialized'] = () => {
     return pixels;
   }
 
-  function drawBlobs(blobs) {
+  function drawBlobs(blobs, color) {
     for (var i = 0; i < blobs.length; i++) {
       ctx.strokeStyle = "black";
       ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w-1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h-1, blobs[i].w*screen_size.w+2, blobs[i].h*screen_size.h+2);
-      ctx.strokeStyle = "yellow";
+      ctx.strokeStyle = color;
       ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
       ctx.strokeStyle = "black";
       ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w+1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h+1, blobs[i].w*screen_size.w-2, blobs[i].h*screen_size.h-2);
+    }
+  }
+  function fillBlobs(blobs, color) {
+    for (var i = 0; i < blobs.length; i++) {
+      ctx.fillStyle = color;
+      ctx.fillRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
     }
   }
 
@@ -385,10 +426,27 @@ cv['onRuntimeInitialized'] = () => {
 
     ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
     // cv.imshow("cv", gray);
-    drawBlobs(blobs);
-
     src.delete()
     gray.delete()
+    drawBlobs(blobs,"yellow");
+    if (blobs.length > 0) {
+      corners = detectCorners(blobs);
+      fillBlobs(corners,"red");
+
+      var origin = o_pins[posterId(blobs)-1];
+      var trans = [corners[1-1].x, corners[1-1].y, corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+      for (var i = 0; i < trans.length; i++) {
+        trans[i] = trans[i]*2-1;
+      }
+      var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
+      var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
+    	var tmat = cv.getPerspectiveTransform(mat1, mat2);
+    	var tmat_arr = new Float32Array(tmat.data64F);
+    	mat1.delete()
+    	mat2.delete();
+    	tmat.delete();
+      drawPoster(tmat_arr, texture);
+    }
 
     requestAnimationFrame(draw);
   }
@@ -396,6 +454,59 @@ cv['onRuntimeInitialized'] = () => {
   draw();
 
 };
+
+function detectCorners(blobs) {
+  var pId = posterId(blobs);
+  var cVals = [10000,10000,10000,10000];
+  var cInds = [0,0,0,0];
+  for (var i = 0; i < blobs.length; i++) {
+    // LOW LEFT
+    var test = dist({x:0, y:0}, blobs[i]);
+    if (test < cVals[0]) {
+      cVals[0] = test;
+      cInds[0] = i;
+    }
+    // TOP LEFT
+    var test = dist({x:0, y:1}, blobs[i]);
+    if (test < cVals[1]) {
+      cVals[1] = test;
+      cInds[1] = i;
+    }
+    // TOP RIGHT
+    var test = dist({x:1, y:1}, blobs[i]);
+    if (test < cVals[2]) {
+      cVals[2] = test;
+      cInds[2] = i;
+    }
+    // LOW RIGHT
+    var test = dist({x:1, y:0}, blobs[i]);
+    if (test < cVals[3]) {
+      cVals[3] = test;
+      cInds[3] = i;
+    }
+  }
+  return [blobs[cInds[0]], blobs[cInds[1]], blobs[cInds[2]], blobs[cInds[3]]];
+}
+
+function posterId(blobs) {
+  var postern = 0;
+	if (blobs.length < 10) {
+		postern = 4;
+	} else if (blobs.length < 24) {
+		postern = 3;
+	} else if (blobs.length < 35) {
+		postern = 2;
+	} else if (blobs.length > 3) {
+		postern = 1;
+	}
+  return postern;
+}
+
+function dist(v1, v2) {
+  var dx = Math.abs(v1.x - v2.x);
+  var dy = Math.abs(v1.y - v2.y);
+  return Math.sqrt(dx*dx+dy*dy);
+}
 
 function hide_loading() {
   document.querySelector("#loadscreen").style.visibility = "hidden";
