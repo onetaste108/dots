@@ -152,6 +152,8 @@ var params = {
 
 var isSettings = false;
 var settingsElm = document.getElementById("controls");
+var fpsElm = document.getElementById("fps");
+var insizeElm = document.getElementById("insize");
 
 function toggle_settings() {
   isSettings = !isSettings;
@@ -247,6 +249,8 @@ cv['onRuntimeInitialized'] = () => {
   var fbis = [fbi2, fbi3];
   var fboIndex = 0;
 
+  var lastTime = new Date();
+
   function applyFilter(n) {
     fboIndex_next = (fboIndex+1)%2;
     twgl.bindFramebufferInfo(gl, fbis[fboIndex_next]);
@@ -287,6 +291,14 @@ cv['onRuntimeInitialized'] = () => {
 
 
   function draw() {
+    if (isSettings) {
+      var newTime = new Date();
+      var fps = Math.round(10000 / (newTime - lastTime))/10;
+      fpsElm.innerHTML = fps;
+      lastTime = newTime;
+
+      insizeElm.innerHTML = video.videoWidth+" "+video.videoHeight;
+    }
     var blobParams = {
       thresholdStep: 1000,
       minThreshold: 200,

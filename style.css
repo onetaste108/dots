@@ -37,6 +37,7 @@ html, body {
   width: 100%;
   top: 0;
   left: 0;
+	visibility: hidden;
 }
 
 #loadcircle {
@@ -113,8 +114,21 @@ html, body {
 #settings {
 	position: fixed;
 	color: yellow;
-	width: 10%;
+	width: 30px;
 	right: 10px;
 	top: 10px;
+}
+#settings:hover {
 	cursor: pointer;
+}
+
+#info {
+	/* position: relative; */
+	width: 100%;
+	margin-top: 0px;
+	min-height: 50px;
+	background-color: black;
+	font-family: Courier;
+	font-weight: bold;
+	color: white;
 }

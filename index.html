@@ -22,6 +22,11 @@
     </div>
 
     <div class="controls" id="controls">
+      <div id="infobg"></div>
+      <p id="info">
+        FPS: <span id="fps"></span><br>
+        Input Size: <span id="insize"></span><br>
+      </p>
       <div class="sliderdiv">
         <p class="slidertext">Hue Low <span class="sliderspan" id="thl"></span></p>
         <input type="range" class="slider" id="hl" min="0" max="1" step="0.01" oninput="slider_change(event);">
@@ -57,11 +62,6 @@
       </div>
 
       <div class="sliderdiv">
-        <p class="slidertext">Display <span class="sliderspan" id="td"></span></p>
-        <input type="range" class="slider" id="d" min="0" max="4" step="1"  oninput="slider_change(event);">
-      </div>
-
-      <div class="sliderdiv">
         <p class="slidertext">Min Area <span class="sliderspan" id="tmina"></span></p>
         <input type="range" class="slider" id="mina" min="0" max="1000" step="1"  oninput="slider_change(event);">
       </div>
@@ -72,15 +72,9 @@
       </div>
 
       <div class="sliderdiv">
-        <p class="slidertext">Min Circle <span class="sliderspan" id="tminc"></span></p>
-        <input type="range" class="slider" id="minc" min="0" max="1" step="0.01"  oninput="slider_change(event);">
+        <p class="slidertext">Display <span class="sliderspan" id="td"></span></p>
+        <input type="range" class="slider" id="d" min="0" max="4" step="1"  oninput="slider_change(event);">
       </div>
-
-      <div class="sliderdiv">
-        <p class="slidertext">Max Circle <span class="sliderspan" id="tmaxc"></span></p>
-        <input type="range" class="slider" id="maxc" min="0" max="1" step="0.01"  oninput="slider_change(event);">
-      </div>
-
     </div>
 
     <img id="settings" src="data/gear_icon.svg" onclick="toggle_settings();"></img>
