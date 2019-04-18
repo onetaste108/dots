@@ -86,6 +86,7 @@ html, body {
   height: 25px; /* Slider handle height */
   background: yellow; /* Green background */
   cursor: pointer; /* Cursor on hover */
+	border-radius: 25px;
 }
 
 #hl::-webkit-slider-thumb {

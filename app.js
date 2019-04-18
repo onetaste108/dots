@@ -154,6 +154,9 @@ var isSettings = false;
 var settingsElm = document.getElementById("controls");
 var fpsElm = document.getElementById("fps");
 var insizeElm = document.getElementById("insize");
+var rensizeElm = document.getElementById("rensize");
+var psizeElm = document.getElementById("psize");
+var blobsElm = document.getElementById("blobs");
 
 function toggle_settings() {
   isSettings = !isSettings;
@@ -229,13 +232,11 @@ cv['onRuntimeInitialized'] = () => {
   var mask_size = {w: Math.round(screen_size.w * mask_ratio), h: Math.round(screen_size.h * mask_ratio)};
 
   var texture = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
-  var texture2 = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
-  var texture3 = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
-  var texture4 = twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h});
+  var texture2 = twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h});
+  var texture3 = twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h});
 
-  var fbi2 = twgl.createFramebufferInfo(gl, [{attachment:texture2}]);
-  var fbi3 = twgl.createFramebufferInfo(gl, [{attachment:texture3}]);
-  var fbi4 = twgl.createFramebufferInfo(gl, [{attachment:texture4, minMag:gl.NEAREST, level:0}], mask_size.w, mask_size.h);
+  var fbi2 = twgl.createFramebufferInfo(gl, [{attachment:texture2}],  mask_size.w,  mask_size.h);
+  var fbi3 = twgl.createFramebufferInfo(gl, [{attachment:texture3}],  mask_size.w,  mask_size.h);
 
   var kernel25 = [
                     0.003765,0.015019,0.023792,0.015019,0.003765,
@@ -267,11 +268,6 @@ cv['onRuntimeInitialized'] = () => {
   }
 
   function grabPixels() {
-    twgl.bindFramebufferInfo(gl, fbi4);
-    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], flip: 1, mode: 0 });
-    twgl.drawBufferInfo(gl, bufferInfo);
-    twgl.setUniforms(programInfo, { flip: 1 });
-
     var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
     gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
@@ -281,11 +277,11 @@ cv['onRuntimeInitialized'] = () => {
   function drawBlobs(blobs) {
     for (var i = 0; i < blobs.length; i++) {
       ctx.strokeStyle = "black";
-      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w-1, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w-1, blobs[i].radius*2*screen_size.w+2, blobs[i].radius*2*screen_size.w+2);
+      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w-1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h-1, blobs[i].w*screen_size.w+2, blobs[i].h*screen_size.h+2);
       ctx.strokeStyle = "yellow";
-      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w, blobs[i].radius*2*screen_size.w, blobs[i].radius*2*screen_size.w);
+      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
       ctx.strokeStyle = "black";
-      ctx.strokeRect(blobs[i].location.x*screen_size.w-blobs[i].radius*screen_size.w+1, blobs[i].location.y*screen_size.h-blobs[i].radius*screen_size.w+1, blobs[i].radius*2*screen_size.w-2, blobs[i].radius*2*screen_size.w-2);
+      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w+1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h+1, blobs[i].w*screen_size.w-2, blobs[i].h*screen_size.h-2);
     }
   }
 
@@ -298,6 +294,8 @@ cv['onRuntimeInitialized'] = () => {
       lastTime = newTime;
 
       insizeElm.innerHTML = video.videoWidth+" "+video.videoHeight;
+      rensizeElm.innerHTML = screen_size.w + " " + screen_size.h;
+      psizeElm.innerHTML = mask_size.w + " " + mask_size.h;
     }
     var blobParams = {
       thresholdStep: 1000,
@@ -343,7 +341,7 @@ cv['onRuntimeInitialized'] = () => {
 
 
     twgl.setUniforms(programInfo, {
-      u_texResolution: [screen_size.w, screen_size.h]
+      u_texResolution: [mask_size.w, mask_size.h]
     });
 
     if (params.d == 0) drawCurrent();
@@ -366,19 +364,23 @@ cv['onRuntimeInitialized'] = () => {
       applyFilter(5);
       applyFilter(6);
     }
+    var pixels = grabPixels();
     if (params.d == 4) drawCurrent();
 
 
 
-    var pixels = grabPixels();
     var src = cv.matFromArray(mask_size.h, mask_size.w, cv.CV_8UC4, pixels);
     var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
     var blobs = findBlobs(gray, blobParams);
     for (var i = 0; i < blobs.length; i++) {
-      blobs[i].location.x /= mask_size.w;
-      blobs[i].location.y /= mask_size.h;
-      blobs[i].radius /= mask_size.w;
+      blobs[i].x /= mask_size.w;
+      blobs[i].y /= mask_size.h;
+      blobs[i].w /= mask_size.w;
+      blobs[i].h /= mask_size.h;
+    }
+    if (isSettings) {
+      blobsElm.innerHTML = blobs.length;
     }
 
     ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
