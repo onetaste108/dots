@@ -229,7 +229,7 @@ window.onload = function() {
 			video.srcObject = stream;
 		}).catch(function(error) {
 					video = new Image;
-          video.src = "data/2.png";
+          video.src = "data/1.png";
 			});
 }
 
@@ -330,6 +330,7 @@ cv['onRuntimeInitialized'] = () => {
 
     return pixels;
   }
+
 
   function drawBlobs(blobs, color) {
     for (var i = 0; i < blobs.length; i++) {
@@ -454,20 +455,21 @@ cv['onRuntimeInitialized'] = () => {
     if (blobs.length > 0) {
       var posterINDEX = posterId(blobs)
       corners = detectCorners(blobs, posterINDEX);
-      fillBlobs(corners,"red");
-      var origin = o_pins[posterINDEX-1];
-      var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
-      for (var i = 0; i < trans.length; i++) {
-        trans[i] = trans[i]*2-1;
-      }
-      test_points = trans;
-      var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
-      var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
-    	var tmat = cv.getPerspectiveTransform(mat1, mat2);
-    	var tmat_arr = new Float32Array(tmat.data64F);
-    	mat1.delete()
-    	mat2.delete();
-    	tmat.delete();
+      fillBlobs(normblobs(blobs),"red");
+      fillBlobs(corners,"blue");
+      // var origin = o_pins[posterINDEX-1];
+      // var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+      // for (var i = 0; i < trans.length; i++) {
+      //   trans[i] = trans[i]*2-1;
+      // }
+      // test_points = trans;
+      // var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
+      // var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
+    	// var tmat = cv.getPerspectiveTransform(mat1, mat2);
+    	// var tmat_arr = new Float32Array(tmat.data64F);
+    	// mat1.delete()
+    	// mat2.delete();
+    	// tmat.delete();
       // drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
     }
 
@@ -479,45 +481,75 @@ cv['onRuntimeInitialized'] = () => {
 };
 
 function detectCorners(blobs, pId) {
+  nb = normblobs(blobs);
+
+  // if (pId == 1) {
+  //   // LL
+  //
+  //
+  //
+  //
+  // }
+
+
+
+  // console.log(nb);
+  // return nb;
+  //
   var cVals = [10000,10000,10000,10000];
   var cInds = [0,0,0,0];
-  for (var i = 0; i < blobs.length; i++) {
+  for (var i = 0; i < nb.length; i++) {
     // LOW LEFT
-    var test = dist({x:0, y:0}, blobs[i]);
+    var test = dist({x:0, y:0}, nb[i]);
     if (test < cVals[0]) {
       cVals[0] = test;
       cInds[0] = i;
     }
     // TOP LEFT
-    var test = dist({x:0, y:1}, blobs[i]);
+    var test = dist({x:0, y:1}, nb[i]);
     if (test < cVals[1]) {
       cVals[1] = test;
       cInds[1] = i;
     }
     // TOP RIGHT
-    var test = dist({x:1, y:1}, blobs[i]);
+    var test = dist({x:1, y:1}, nb[i]);
     if (test < cVals[2]) {
       cVals[2] = test;
       cInds[2] = i;
     }
     // LOW RIGHT
-    var test = dist({x:1, y:0}, blobs[i]);
+    var test = dist({x:1, y:0}, nb[i]);
     if (test < cVals[3]) {
       cVals[3] = test;
       cInds[3] = i;
     }
   }
-  return [blobs[cInds[0]], blobs[cInds[1]], blobs[cInds[2]], blobs[cInds[3]]];
+  return [nb[cInds[0]], nb[cInds[1]], nb[cInds[2]], nb[cInds[3]]];
 }
 
 
-
-
-
-
-
-
-
+function normblobs(blobs) {
+  var nb = [];
+  var maxx = 0;
+  var maxy = 0;
+  var minx = 10000;
+  var miny = 10000;
+  for (var i = 0; i < blobs.length; i++) {
+    maxx = Math.max(maxx,blobs[i].x);
+    maxy = Math.max(maxy,blobs[i].y);
+    minx = Math.min(minx,blobs[i].x);
+    miny = Math.min(miny,blobs[i].y);
+  }
+  for (var i = 0; i < blobs.length; i++) {
+    nb.push({
+      x:(blobs[i].x-minx)/(maxx-minx),
+      y:(blobs[i].y-miny)/(maxy-miny),
+      w:blobs[i].w,
+      h:blobs[i].h
+    })
+  }
+  return nb;
+}
 
 function posterId(blobs) {
   var postern = 0;
@@ -531,6 +563,15 @@ function posterId(blobs) {
 		postern = 4;
 	}
   return postern;
+}
+
+function sortBlobs(ref, blobs) {
+  var sorted = [];
+  var values = [];
+  for (var i = 0; i < blobs.length; i++) {
+
+  }
+
 }
 
 function dist(v1, v2) {
