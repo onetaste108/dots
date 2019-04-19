@@ -10,6 +10,7 @@ uniform vec2 u_texResolution;
 uniform float flip;
 uniform int mode;
 uniform mat3 u_tmat;
+uniform float r;
 
 mat3 transpose(mat3 inMatrix) {
     vec3 i0 = inMatrix[0];
@@ -26,7 +27,10 @@ mat3 transpose(mat3 inMatrix) {
 void main() {
   vec2 pos = a_pos;
   if (mode != 100) {
-    gl_Position = vec4(pos * vec2(1.0, flip), 0, 1);
+    mat2 rm = mat2(cos(r), -sin(r), sin(r), cos(r));
+    vec2 p = pos * vec2(1.0, flip);
+    p = rm*p/(1.0+abs(r));
+    gl_Position = vec4(p, 0, 1);
     v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
   } else {
     mat3 trans2 = transpose(u_tmat);
@@ -150,7 +154,7 @@ void main() {
   } else if (mode == 6) {
     color = dilate(u_tex, v_texCoord, u_resolution);
   } else if (mode == 100) {
-    color = texture2D(u_tex, v_texCoord);
+    color = texture2D(u_tex, vec2(v_texCoord.x, 1.0-v_texCoord.y));
   }
   gl_FragColor = color;
 }
@@ -158,10 +162,10 @@ void main() {
 
 test_points = [];
 var o_pins = [
-	[-0.6689280868385346, -0.7724609375, -0.4328358208955224, 0.853515625, 0.6689280868385346, 0.771484375, 0.5115332428765265, -0.52734375],
-  [-0.9661509295499021, -0.6015625, 0.809514891144814, -0.431640625, 0.72630259295499, 0.4267578125, -0.8857593872309197, 0.5966796875],
-  [-0.8242853338068181, -0.7041015625, 0.8240855823863635, -0.5283203125, 0.7334391276041665, 0.365234375, -0.5676861387310606, 0.5400390625],
-  [-0.7378225615530303, -0.9462890625, -0.6164957682291667, -0.9462890625, 0.7390173709753787, 0.9423828125, 0.24673739346590917, 0.9423828125],
+	[-0.4325842696629213, 0.85451197053407, -0.5917602996254682, -0.85451197053407, 0.19475655430711614, -0.6887661141804788, 0.42883895131086147, 0.85451197053407],
+  [-0.8689138576779026, 0.5985267034990791, -0.9531835205992509, -0.5985267034990792, 0.7940074906367041, -0.429097605893186, 0.7134831460674158, 0.4290976058931859],
+  [-0.5617977528089888, 0.5414364640883975, -0.8183520599250936, -0.7016574585635359, 0.8183520599250933, -0.5267034990791897, 0.7284644194756553, 0.3683241252302025],
+  [0.24531835205992492, 0.9465930018416207, -0.7340823970037453, -0.9465930018416207, 0.24344569288389506, -0.06261510128913439, 0.7340823970037453, 0.9465930018416207],
 ]
 
 var params = {
@@ -229,7 +233,7 @@ window.onload = function() {
 			video.srcObject = stream;
 		}).catch(function(error) {
 					video = new Image;
-          video.src = "data/1.png";
+          video.src = "data/3.png";
 			});
 }
 
@@ -238,6 +242,11 @@ cv['onRuntimeInitialized'] = () => {
   var cv_canvas = document.querySelector("#cv");
   var ctx = cv_canvas.getContext("2d");
   var gl = canvas.getContext("webgl");
+  // var gl = canvas.getContext("webgl", {
+  //   premultipliedAlpha: false  // Ask for non-premultiplied alpha
+  // });
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   var programInfo = twgl.createProgramInfo(gl, [vs, fs]);
   var arrays = {
     a_pos: {
@@ -349,6 +358,8 @@ cv['onRuntimeInitialized'] = () => {
     }
   }
 
+  var time = 0;
+
 
   function draw() {
     if (isSettings) {
@@ -396,7 +407,8 @@ cv['onRuntimeInitialized'] = () => {
     twgl.setTextureFromElement(gl, texture, video, {level:0});
 
     twgl.setUniforms(programInfo, {
-      u_texResolution: [video.videoWidth, video.videoHeight]
+      u_texResolution: [video.videoWidth, video.videoHeight],
+      // r: Math.sin(time*2)/3
     });
 
     twgl.bindFramebufferInfo(gl, fbi2);
@@ -405,7 +417,8 @@ cv['onRuntimeInitialized'] = () => {
 
 
     twgl.setUniforms(programInfo, {
-      u_texResolution: [mask_size.w, mask_size.h]
+      u_texResolution: [mask_size.w, mask_size.h],
+      r:0
     });
 
     if (params.d == 0) drawCurrent();
@@ -451,28 +464,30 @@ cv['onRuntimeInitialized'] = () => {
     // cv.imshow("cv", gray);
     src.delete()
     gray.delete()
-    drawBlobs(blobs,"yellow");
-    if (blobs.length > 0) {
-      var posterINDEX = posterId(blobs)
+    if (isSettings) drawBlobs(blobs,"yellow");
+    var posterINDEX = posterId(blobs)
+    if (posterINDEX > 0 && !isSettings) {
+      // console.log(posterINDEX);
+      // var [nb,v] = normblobs(blobs);
+      // fillBlobs(nb,"red");
       corners = detectCorners(blobs, posterINDEX);
-      fillBlobs(normblobs(blobs),"red");
-      fillBlobs(corners,"blue");
-      // var origin = o_pins[posterINDEX-1];
-      // var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
-      // for (var i = 0; i < trans.length; i++) {
-      //   trans[i] = trans[i]*2-1;
-      // }
-      // test_points = trans;
-      // var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
-      // var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
-    	// var tmat = cv.getPerspectiveTransform(mat1, mat2);
-    	// var tmat_arr = new Float32Array(tmat.data64F);
-    	// mat1.delete()
-    	// mat2.delete();
-    	// tmat.delete();
-      // drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
+      // fillBlobs(corners,"blue");
+      var origin = o_pins[posterINDEX-1];
+      var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+      for (var i = 0; i < trans.length; i++) {
+        trans[i] = trans[i]*2-1;
+      }
+      test_points = trans;
+      var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
+      var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
+    	var tmat = cv.getPerspectiveTransform(mat1, mat2);
+    	var tmat_arr = new Float32Array(tmat.data64F);
+    	mat1.delete()
+    	mat2.delete();
+    	tmat.delete();
+      drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
     }
-
+    time += 1/60;
     requestAnimationFrame(draw);
   }
   hide_loading();
@@ -481,21 +496,155 @@ cv['onRuntimeInitialized'] = () => {
 };
 
 function detectCorners(blobs, pId) {
-  nb = normblobs(blobs);
-
+  var [nb, nvals] = normblobs(blobs);
+  var corners = [];
   // if (pId == 1) {
   //   // LL
-  //
-  //
-  //
-  //
+  //   var ll = Array.from(nb);
+  //   ll.sort((a,b)=>{return dist({x:0,y:1},a)-dist({x:0,y:1},b);});
+  //   ll = ll.slice(0,7);
+  //   ll.sort((a,b)=>{return b.y - a.y;});
+  //   ll = ll.slice(0,3);
+  //   ll.sort((a,b)=>{return a.x - b.x;});
+  //   ll = ll.slice(0,1);
+  //   corners.push(...ll);
+  //   // LU
+  //   var lu = Array.from(nb);
+  //   lu.sort((a,b)=>{return dist({x:0,y:0},a)-dist({x:0,y:0},b);});
+  //   lu = lu.slice(0,5);
+  //   lu.sort((a,b)=>{return a.y-b.y;});
+  //   lu = lu.slice(0,1);
+  //   corners.push(...lu);
+  //   // RU
+  //   var ru = Array.from(nb);
+  //   ru = ru.filter((a)=>{return a.x > 0.4})
+  //   ru.sort((a,b)=>{return a.y-b.y;});
+  //   ru = ru.slice(0,1);
+  //   corners.push(...ru);
+  //   // LU
+  //   var rl = Array.from(nb);
+  //   rl = rl.filter((a)=>{return a.x > 0.6})
+  //   rl.sort((a,b)=>{return b.y-a.y;});
+  //   rl = rl.slice(0,2);
+  //   rl.sort((a,b)=>{return a.x-b.x;});
+  //   if (dist(rl[0],rl[1]) > 0.2) {
+  //     rl = [rl[1]];
+  //   } else {
+  //     rl = [rl[0]];
+  //   }
+  //   corners.push(...rl);
   // }
+  if (pId == 2) {
+    // LL
+    var ll = Array.from(nb);
+    ll.sort((a,b)=>{return dist({x:-1,y:2},a)-dist({x:-1,y:2},b);});
+    ll = ll.slice(0,1);
+    corners.push(...ll);
+    // LU
+    var lu = Array.from(nb);
+    lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
+    lu = lu.slice(0,1);
+    corners.push(...lu);
+    // RU
+    var ru = Array.from(nb);
+    ru.sort((a,b)=>{return dist({x:2.5,y:-1},a)-dist({x:2.5,y:-1},b);});
+    ru = ru.slice(0,2);
+    ru.sort((a,b)=>{return a.y-b.y;});
+    ru = ru.slice(0,1);
+    corners.push(...ru);
+    // LU
+    var rl = Array.from(nb);
+    rl.sort((a,b)=>{return dist({x:2.5,y:2.5},a)-dist({x:2.5,y:2.5},b);});
+    rl = rl.slice(0,1);
+    corners.push(...rl);
+  }
+  if (pId == 3) {
+    // LL
+    var ll = Array.from(nb);
+    ll.sort((a,b)=>{return dist({x:-1,y:2},a)-dist({x:-1,y:2},b);});
+    ll = ll.slice(0,1);
+    corners.push(...ll);
+    // LU
+    var lu = Array.from(nb);
+    lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
+    lu = lu.slice(0,1);
+    corners.push(...lu);
+    // RU
+    var ru = Array.from(nb);
+    ru.sort((a,b)=>{return dist({x:2.5,y:-1},a)-dist({x:2.5,y:-1},b);});
+    // ru = ru.slice(0,2);
+    // ru.sort((a,b)=>{return a.y-b.y;});
+    ru = ru.slice(0,1);
+    corners.push(...ru);
+    // LU
+    var rl = Array.from(nb);
+    rl.sort((a,b)=>{return dist({x:2.5,y:2.5},a)-dist({x:2.5,y:2.5},b);});
+    rl = rl.slice(0,1);
+    corners.push(...rl);
+  }
+  if (pId == 4) {
+    // LL
+    var ll = Array.from(nb);
+    ll.sort((a,b)=>{return dist({x:0,y:2},a)-dist({x:0,y:2},b);});
+    ll = ll.slice(0,1);
+    corners.push(...ll);
+    // LU
+    var lu = Array.from(nb);
+    lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
+    lu = lu.slice(0,1);
+    corners.push(...lu);
+    // RU
+    var ru = Array.from(nb);
+    ru.sort((a,b)=>{return dist({x:1,y:0},a)-dist({x:1,y:0},b);});
+    // ru = ru.slice(0,2);
+    // ru.sort((a,b)=>{return a.y-b.y;});
+    ru = ru.slice(0,1);
+    corners.push(...ru);
+    // LU
+    var rl = Array.from(nb);
+    rl.sort((a,b)=>{return dist({x:2.5,y:2.5},a)-dist({x:2.5,y:2.5},b);});
+    rl = rl.slice(0,1);
+    corners.push(...rl);
+  }
+  if (pId == 1) {
+    // LL
+    var ll = Array.from(nb);
+    ll.sort((a,b)=>{return dist({x:0,y:2},a)-dist({x:0,y:2},b);});
+    ll = ll.slice(0,2);
+    ll.sort((a,b)=>{return a.x-b.x;});
+    ll = ll.slice(0,1);
+    corners.push(...ll);
+    // LU
+    var lu = Array.from(nb);
+    lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
+    lu = lu.slice(0,2);
+    lu.sort((a,b)=>{return a.y-b.y;});
+    lu = lu.slice(0,1);
+    corners.push(...lu);
+    // RU
+    var ru = Array.from(nb);
+    ru = ru.filter((a)=>{return a.x > 0.4})
+    ru.sort((a,b)=>{return a.y-b.y;});
+    ru = ru.slice(0,1);
+    corners.push(...ru);
+    // LU
+    var rl = Array.from(nb);
+    rl = rl.filter((a)=>{return a.x > 0.6})
+    rl.sort((a,b)=>{return b.y-a.y;});
+    rl = rl.slice(0,2);
+    rl.sort((a,b)=>{return a.x-b.x;});
+    if (dist(rl[0],rl[1]) > 0.2) {
+      rl = [rl[1]];
+    } else {
+      rl = [rl[0]];
+    }
+    corners.push(...rl);
+  }
 
+  // console.log(nvals);
+  return denormblobs(corners,nvals);
+  return corners;
 
-
-  // console.log(nb);
-  // return nb;
-  //
   var cVals = [10000,10000,10000,10000];
   var cInds = [0,0,0,0];
   for (var i = 0; i < nb.length; i++) {
@@ -548,19 +697,35 @@ function normblobs(blobs) {
       h:blobs[i].h
     })
   }
-  return nb;
+  return [nb, [maxx,maxy,minx,miny]];
+}
+
+function denormblobs(blobs, nvals) {
+  var [maxx, maxy, minx, miny] = nvals;
+  var n = [];
+  for (var i = 0; i < blobs.length; i++) {
+    n.push({
+      x:blobs[i].x*(maxx-minx)+minx,
+      y:blobs[i].y*(maxy-miny)+miny,
+      w:blobs[i].w,
+      h:blobs[i].h
+    })
+  }
+  return n;
 }
 
 function posterId(blobs) {
   var postern = 0;
-	if (blobs.length < 10) {
-		postern = 1;
-	} else if (blobs.length < 24) {
-		postern = 2;
-	} else if (blobs.length < 35) {
-		postern = 3;
-	} else if (blobs.length > 3) {
+  if (blobs.length < 3) {
+    postern = 0;
+  } else if (blobs.length < 10) {
 		postern = 4;
+	} else if (blobs.length < 24) {
+		postern = 3;
+	} else if (blobs.length < 35) {
+		postern = 2;
+	} else if (blobs.length > 3) {
+		postern = 1;
 	}
   return postern;
 }
