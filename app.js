@@ -161,6 +161,8 @@ void main() {
     color = dilate(u_tex, v_texCoord, u_resolution);
   } else if (u_mode == 100) {
     color = texture2D(u_tex, vec2(v_texCoord.x, 1.0-v_texCoord.y));
+    float a = (1.0-color.r) - (1.0-color.a);
+    color = vec4(0,0,0,a);
   }
   gl_FragColor = color;
 }
@@ -294,16 +296,16 @@ function main() {
 
   var posterImg1 = new Image();
   posterImg1.src = "data/1.1.png";
-  posterImg1.onload = () => { twgl.setTextureFromElement(gl, posterTex1, posterImg1); };
+  posterImg1.onload = () => { twgl.setTextureFromElement(gl, posterTex1, posterImg1, {minMag:gl.LINEAR}); };
   var posterImg2 = new Image();
   posterImg2.src = "data/2.1.png";
-  posterImg2.onload = () => { twgl.setTextureFromElement(gl, posterTex2, posterImg2); };
+  posterImg2.onload = () => { twgl.setTextureFromElement(gl, posterTex2, posterImg2, {minMag:gl.LINEAR}); };
   var posterImg3 = new Image();
   posterImg3.src = "data/3.1.png";
-  posterImg3.onload = () => { twgl.setTextureFromElement(gl, posterTex3, posterImg3); };
+  posterImg3.onload = () => { twgl.setTextureFromElement(gl, posterTex3, posterImg3, {minMag:gl.LINEAR}); };
   var posterImg4 = new Image();
   posterImg4.src = "data/4.1.png";
-  posterImg4.onload = () => { twgl.setTextureFromElement(gl, posterTex4, posterImg4); };
+  posterImg4.onload = () => { twgl.setTextureFromElement(gl, posterTex4, posterImg4, {minMag:gl.LINEAR}); };
 
   var texture = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
   var texture2 = twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h});
@@ -419,13 +421,15 @@ function main() {
     });
 
     if (videoIsLoaded) {
-      twgl.setTextureFromElement(gl, texture, video, {level:0});
-      twgl.setUniforms(programInfo, {
-        u_texResolution: [video.videoWidth, video.videoHeight],
-        u_fill:1,
-        // r: Math.sin(time*2)/3
+      if (video.videoWidth) {
+        twgl.setTextureFromElement(gl, texture, video, {level:0});
+        twgl.setUniforms(programInfo, {
+          u_texResolution: [video.videoWidth, video.videoHeight],
+          u_fill:1,
+          // r: Math.sin(time*2)/3
 
-      });
+        });
+      }
     }
 
     twgl.bindFramebufferInfo(gl, fbi2);
