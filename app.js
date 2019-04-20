@@ -177,6 +177,7 @@ var o_pins = [
 ]
 
 var params = {
+  min_screen: 720,
   max_size: 1024,
 
   hl: 0.0,
@@ -280,6 +281,9 @@ function main() {
 
 
   var screen_size = {w: canvas.clientWidth, h: canvas.clientHeight};
+  var screen_size_ratio = Math.max( Math.max(screen_size.w, screen_size.h), params.min_screen ) / Math.max(screen_size.w, screen_size.h);
+  screen_size.w = Math.round(screen_size.w*screen_size_ratio);
+  screen_size.h = Math.round(screen_size.h*screen_size_ratio);
   canvas.width = screen_size.w;
   canvas.height = screen_size.h;
   cv_canvas.width = screen_size.w;
