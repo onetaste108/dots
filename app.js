@@ -7,45 +7,51 @@ attribute vec2 a_texCoord;
 varying vec2 v_texCoord;
 uniform vec2 u_resolution;
 uniform vec2 u_texResolution;
-uniform float flip;
-uniform int mode;
 uniform mat3 u_tmat;
-uniform float r;
+uniform float u_angle;
+uniform float u_flip;
+uniform int u_mode;
+uniform int u_fill;
 
-mat3 transpose(mat3 inMatrix) {
-    vec3 i0 = inMatrix[0];
-    vec3 i1 = inMatrix[1];
-    vec3 i2 = inMatrix[2];
-    highp mat3 outMatrix = mat3(
-                 vec3(i0.x, i1.x, i2.x),
-                 vec3(i0.y, i1.y, i2.y),
-                 vec3(i0.z, i1.z, i2.z)
-                 );
-    return outMatrix;
+vec2 fill(vec2 s_res, vec2 t_res) {
+  float s_rat = s_res.x / s_res.y;
+  float t_rat = t_res.x / t_res.y;
+  vec2 f_pos = vec2(1, 1);
+  if (s_rat < t_rat) {
+    f_pos.x = t_rat / s_rat;
+  } else {
+    f_pos.y = s_rat / t_rat;
+  }
+  return f_pos;
 }
 
 void main() {
   vec2 pos = a_pos;
-  if (mode != 100) {
-    mat2 rm = mat2(cos(r), -sin(r), sin(r), cos(r));
-    vec2 p = pos * vec2(1.0, flip);
-    p = rm*p/(1.0+abs(r));
-    gl_Position = vec4(p, 0, 1);
+  vec4 Position;
+  if (u_mode != 100) {
+    mat2 rotation_mat = mat2(cos(u_angle), -sin(u_angle), sin(u_angle), cos(u_angle));
+    pos = pos * vec2(1.0, u_flip);
+    if (u_fill == 1) {
+      pos *= fill(u_resolution, u_texResolution);
+    }
+    pos = rotation_mat * pos / (1.0+abs(u_angle)); // Test transformation
+    Position = vec4(pos, 0, 1);
     v_texCoord = vec2(a_texCoord.x, a_texCoord.y);
   } else {
-    mat3 trans2 = transpose(u_tmat);
-    vec3 n_pos = trans2*vec3(pos,1);
-    gl_Position = vec4(n_pos.x,-n_pos.y,0,n_pos.z);
+    vec3 n_pos = u_tmat * vec3(pos, 1);
+    Position = vec4(n_pos.x, -n_pos.y, 0, n_pos.z);
     v_texCoord = vec2(a_texCoord.x, 1.0-a_texCoord.y);
   }
+  gl_Position = Position;
 }
 `;
 fs = `
 precision mediump float;
 precision mediump int;
+
 uniform sampler2D u_tex;
 uniform vec2 u_resolution;
-uniform int mode;
+uniform int u_mode;
 uniform float u_kernel9[9];
 uniform float u_kernel25[25];
 uniform vec3 u_hsv_l;
@@ -139,21 +145,21 @@ vec4 dilate(sampler2D tex, vec2 pos, vec2 res) {
 
 void main() {
   vec4 color;
-  if (mode == 0) {
+  if (u_mode == 0) {
     color = vec4(texture2D(u_tex, v_texCoord).rgb, 1.0);
-  } else if (mode == 1) {
+  } else if (u_mode == 1) {
     color = conv9(u_tex, v_texCoord, u_kernel9, u_resolution);
-  } else if (mode == 2) {
+  } else if (u_mode == 2) {
     color = conv25(u_tex, v_texCoord, u_kernel25, u_resolution);
-  } else if (mode == 3) {
+  } else if (u_mode == 3) {
     color = vec4(rgb2hsv(texture2D(u_tex, v_texCoord).rgb), 1.0);
-  } else if (mode == 4) {
+  } else if (u_mode == 4) {
     color = clip(texture2D(u_tex, v_texCoord), u_hsv_l, u_hsv_u);
-  } else if (mode == 5) {
+  } else if (u_mode == 5) {
     color = erode(u_tex, v_texCoord, u_resolution);
-  } else if (mode == 6) {
+  } else if (u_mode == 6) {
     color = dilate(u_tex, v_texCoord, u_resolution);
-  } else if (mode == 100) {
+  } else if (u_mode == 100) {
     color = texture2D(u_tex, vec2(v_texCoord.x, 1.0-v_texCoord.y));
   }
   gl_FragColor = color;
@@ -219,6 +225,8 @@ function slider_change(event) {
   params[me.id] = me.value;
 }
 
+var videoIsLoaded = false;
+
 var video = document.querySelector("#video");
 window.onload = function() {
 	var constrains = {
@@ -231,13 +239,19 @@ window.onload = function() {
 		.then(function(stream) {
 			track = stream.getTracks()[0];
 			video.srcObject = stream;
+      video.oncanplay = ()=>{videoIsLoaded=true;};
 		}).catch(function(error) {
 					video = new Image;
           video.src = "data/3.png";
+          video.onload = ()=>{videoIsLoaded=true;};
 			});
 }
 
 cv['onRuntimeInitialized'] = () => {
+  main();
+}
+
+function main() {
   var canvas = document.querySelector("#canvas");
   var cv_canvas = document.querySelector("#cv");
   var ctx = cv_canvas.getContext("2d");
@@ -315,21 +329,21 @@ cv['onRuntimeInitialized'] = () => {
   function applyFilter(n) {
     fboIndex_next = (fboIndex+1)%2;
     twgl.bindFramebufferInfo(gl, fbis[fboIndex_next]);
-    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], mode: n, flip: 1});
+    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], u_mode: n, u_flip: 1});
     twgl.drawBufferInfo(gl, bufferInfo);
     fboIndex = fboIndex_next;
   }
 
   function drawCurrent() {
     twgl.bindFramebufferInfo(gl);
-    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], flip: -1, mode: 0 });
+    twgl.setUniforms(programInfo, { u_tex: textures[fboIndex], u_flip: -1, u_mode: 0 });
     twgl.drawBufferInfo(gl, bufferInfo);
-    twgl.setUniforms(programInfo, { flip: 1 });
+    twgl.setUniforms(programInfo, { u_flip: 1 });
   }
 
   function drawPoster(matrix, poster) {
     twgl.bindFramebufferInfo(gl);
-    twgl.setUniforms(programInfo, { u_tex: poster, flip: 1, mode: 100, u_tmat: matrix});
+    twgl.setUniforms(programInfo, { u_tex: poster, u_flip: 1, u_mode: 100, u_tmat: matrix});
     twgl.drawBufferInfo(gl, bufferInfo);
   }
 
@@ -397,28 +411,33 @@ cv['onRuntimeInitialized'] = () => {
     };
     fboIndex = 0;
     twgl.setUniforms(programInfo, {
-      u_resolution: [screen_size.w, screen_size.h],
-      flip: 1,
+      u_resolution: [canvas.clientWidth, canvas.clientHeight],
+      u_flip: 1,
       u_kernel25: kernel25,
       u_hsv_l: [params.hl, params.sl, params.vl],
       u_hsv_u: [params.hu, params.su, params.vu]
     });
 
-    twgl.setTextureFromElement(gl, texture, video, {level:0});
+    if (videoIsLoaded) {
+      twgl.setTextureFromElement(gl, texture, video, {level:0});
+      twgl.setUniforms(programInfo, {
+        u_texResolution: [video.videoWidth, video.videoHeight],
+        u_fill:1,
+        // r: Math.sin(time*2)/3
 
-    twgl.setUniforms(programInfo, {
-      u_texResolution: [video.videoWidth, video.videoHeight],
-      // r: Math.sin(time*2)/3
-    });
+      });
+    }
 
     twgl.bindFramebufferInfo(gl, fbi2);
-    twgl.setUniforms(programInfo, { u_tex: texture, mode: 0});
+    twgl.setUniforms(programInfo, { u_tex: texture, u_mode: 0});
     twgl.drawBufferInfo(gl, bufferInfo);
 
 
     twgl.setUniforms(programInfo, {
       u_texResolution: [mask_size.w, mask_size.h],
-      r:0
+      u_resolution: [mask_size.w, mask_size.h],
+      u_angle:0,
+      u_fill:0
     });
 
     if (params.d == 0) drawCurrent();
@@ -481,6 +500,7 @@ cv['onRuntimeInitialized'] = () => {
       var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
       var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
     	var tmat = cv.getPerspectiveTransform(mat1, mat2);
+    	cv.transpose(tmat, tmat);
     	var tmat_arr = new Float32Array(tmat.data64F);
     	mat1.delete()
     	mat2.delete();
@@ -498,42 +518,6 @@ cv['onRuntimeInitialized'] = () => {
 function detectCorners(blobs, pId) {
   var [nb, nvals] = normblobs(blobs);
   var corners = [];
-  // if (pId == 1) {
-  //   // LL
-  //   var ll = Array.from(nb);
-  //   ll.sort((a,b)=>{return dist({x:0,y:1},a)-dist({x:0,y:1},b);});
-  //   ll = ll.slice(0,7);
-  //   ll.sort((a,b)=>{return b.y - a.y;});
-  //   ll = ll.slice(0,3);
-  //   ll.sort((a,b)=>{return a.x - b.x;});
-  //   ll = ll.slice(0,1);
-  //   corners.push(...ll);
-  //   // LU
-  //   var lu = Array.from(nb);
-  //   lu.sort((a,b)=>{return dist({x:0,y:0},a)-dist({x:0,y:0},b);});
-  //   lu = lu.slice(0,5);
-  //   lu.sort((a,b)=>{return a.y-b.y;});
-  //   lu = lu.slice(0,1);
-  //   corners.push(...lu);
-  //   // RU
-  //   var ru = Array.from(nb);
-  //   ru = ru.filter((a)=>{return a.x > 0.4})
-  //   ru.sort((a,b)=>{return a.y-b.y;});
-  //   ru = ru.slice(0,1);
-  //   corners.push(...ru);
-  //   // LU
-  //   var rl = Array.from(nb);
-  //   rl = rl.filter((a)=>{return a.x > 0.6})
-  //   rl.sort((a,b)=>{return b.y-a.y;});
-  //   rl = rl.slice(0,2);
-  //   rl.sort((a,b)=>{return a.x-b.x;});
-  //   if (dist(rl[0],rl[1]) > 0.2) {
-  //     rl = [rl[1]];
-  //   } else {
-  //     rl = [rl[0]];
-  //   }
-  //   corners.push(...rl);
-  // }
   if (pId == 2) {
     // LL
     var ll = Array.from(nb);
@@ -630,50 +614,26 @@ function detectCorners(blobs, pId) {
     // LU
     var rl = Array.from(nb);
     rl = rl.filter((a)=>{return a.x > 0.6})
-    rl.sort((a,b)=>{return b.y-a.y;});
-    rl = rl.slice(0,2);
-    rl.sort((a,b)=>{return a.x-b.x;});
-    if (dist(rl[0],rl[1]) > 0.2) {
-      rl = [rl[1]];
+    if (rl.length > 0) {
+      rl.sort((a,b)=>{return b.y-a.y;});
+      rl = rl.slice(0,2);
+      rl.sort((a,b)=>{return a.x-b.x;});
+      if (rl.length > 1) {
+        if (dist(rl[0],rl[1]) > 0.2 && rl.length > 1) {
+          rl = [rl[1]];
+        } else {
+          rl = [rl[0]];
+        }
+      } else {
+        rl = [rl[0]];
+      }
+      corners.push(...rl);
     } else {
-      rl = [rl[0]];
+      corners.push([{x:1, y:1, w:1, h:1}]);
     }
-    corners.push(...rl);
   }
-
-  // console.log(nvals);
   return denormblobs(corners,nvals);
   return corners;
-
-  var cVals = [10000,10000,10000,10000];
-  var cInds = [0,0,0,0];
-  for (var i = 0; i < nb.length; i++) {
-    // LOW LEFT
-    var test = dist({x:0, y:0}, nb[i]);
-    if (test < cVals[0]) {
-      cVals[0] = test;
-      cInds[0] = i;
-    }
-    // TOP LEFT
-    var test = dist({x:0, y:1}, nb[i]);
-    if (test < cVals[1]) {
-      cVals[1] = test;
-      cInds[1] = i;
-    }
-    // TOP RIGHT
-    var test = dist({x:1, y:1}, nb[i]);
-    if (test < cVals[2]) {
-      cVals[2] = test;
-      cInds[2] = i;
-    }
-    // LOW RIGHT
-    var test = dist({x:1, y:0}, nb[i]);
-    if (test < cVals[3]) {
-      cVals[3] = test;
-      cInds[3] = i;
-    }
-  }
-  return [nb[cInds[0]], nb[cInds[1]], nb[cInds[2]], nb[cInds[3]]];
 }
 
 
