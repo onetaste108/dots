@@ -105,7 +105,8 @@ function main() {
   // SETUP SCREEN SIZE --------------------------------------------------------
   var screen_size, screen_size_ratio, max_size, mask_ratio;
   function update_screen_size() {
-    screen_size_ratio = Math.max( Math.max(canvas.clientWidth, canvas.clientHeight), params.min_screen ) / Math.max(screen_size.w, screen_size.h);
+    screen_size = {w: canvas.clientWidth, h: canvas.clientHeight};
+    screen_size_ratio = Math.max( Math.max(screen_size.w, screen_size.h), params.min_screen ) / Math.max(screen_size.w, screen_size.h);
     screen_size.w = Math.round(screen_size.w*screen_size_ratio);
     screen_size.h = Math.round(screen_size.h*screen_size_ratio);
     canvas.width = screen_size.w;
@@ -139,7 +140,7 @@ function main() {
   var fbo_filter = [];
   for (var i = 0; i < 2; i++) {
     tex_filter.push( twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h}) );
-    fbo_filter.push( twgl.createFramebufferInfo(gl, [{attachment: tex_filter[i]}],  mask_size.w,  mask_size.h); )
+    fbo_filter.push( twgl.createFramebufferInfo(gl, [{attachment: tex_filter[i]}],  mask_size.w,  mask_size.h) );
   }
   var fboIndex = 0;
 
@@ -157,14 +158,14 @@ function main() {
     } else {
       video_size = screen_size;
     }
-    twgl.setTextureFromElement(gl, tex_main, video, {level:0});
+    if (videoIsLoaded) twgl.setTextureFromElement(gl, tex_main, video, {level:0});
     twgl.bindFramebufferInfo(gl);
     twgl.setUniforms(programInfo, {
       u_hsv_l: [params.hl, params.sl, params.vl],
       u_hsv_u: [params.hu, params.su, params.vu],
-      u_resolution: screen_size,
-      tex_resolution: video_size,
-      u_fill: 1,
+      u_resolution: [screen_size.w, screen_size.h],
+      tex_resolution: [video_size.w, video_size.h],
+      u_fill: 0,
       u_tex: tex_main,
       u_flip: -1,
       u_mode: NORMAL,
@@ -173,7 +174,7 @@ function main() {
     twgl.drawBufferInfo(gl, bufferInfo);
     twgl.bindFramebufferInfo(gl, fbo_filter[0]);
     twgl.setUniforms(programInfo, {
-      u_resolution: mask_size,
+      u_resolution: [mask_size.w, mask_size.h],
       u_flip: 1,
     });
     twgl.drawBufferInfo(gl, bufferInfo);
@@ -246,74 +247,74 @@ function main() {
     fboIndex = 0;
 
     capture();
-    if (params.d == 0) drawCurrent();
-    for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
-    if (params.d == 1) drawCurrent();
-    applyFilter(HSV_CLIP);
-    if (params.d == 2) drawCurrent();
-    for (var i = 0; i < params.e; i++) {
-      applyFilter(ERODE);
-      applyFilter(DILATE);
-    }
-    var pixels = grabPixels();
-    if (params.d == 4) drawCurrent();
+    // if (params.d == 0) drawCurrent();
+    // for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
+    // if (params.d == 1) drawCurrent();
+    // applyFilter(HSV_CLIP);
+    // if (params.d == 2) drawCurrent();
+    // for (var i = 0; i < params.e; i++) {
+    //   applyFilter(ERODE);
+    //   applyFilter(DILATE);
+    // }
+    // var pixels = grabPixels();
+    // if (params.d == 4) drawCurrent();
 
 
-    var blobParams = {
-      thresholdStep: 1000,
-      minThreshold: 200,
-      maxThreshold: 256,
-      filterByColor: true,
-      blobColor: 255,
-      filterByArea: true,
-      minArea: params["mina"],
-      maxArea: params["maxa"],
-      filterByCircularity: false,
-      faster: true
-    };
-
-    var src = cv.matFromArray(mask_size.h, mask_size.w, cv.CV_8UC4, pixels);
-    var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    var blobs = findBlobs(gray, blobParams);
-    for (var i = 0; i < blobs.length; i++) {
-      blobs[i].x /= mask_size.w;
-      blobs[i].y /= mask_size.h;
-      blobs[i].w /= mask_size.w;
-      blobs[i].h /= mask_size.h;
-    }
-    if (isSettings) {
-      blobsElm.innerHTML = blobs.length;
-    }
-
-    ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
-    // cv.imshow("cv", gray);
-    src.delete()
-    gray.delete()
-    if (isSettings) drawBlobs(blobs,"yellow");
-    var posterINDEX = posterId(blobs)
-    if (posterINDEX > 0 && !isSettings) {
-      // console.log(posterINDEX);
-      // var [nb,v] = normblobs(blobs);
-      // fillBlobs(nb,"red");
-      corners = detectCorners(blobs, posterINDEX);
-      // fillBlobs(corners,"blue");
-      var origin = o_pins[posterINDEX-1];
-      var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
-      for (var i = 0; i < trans.length; i++) {
-        trans[i] = trans[i]*2-1;
-      }
-      test_points = trans;
-      var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
-      var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
-    	var tmat = cv.getPerspectiveTransform(mat1, mat2);
-    	cv.transpose(tmat, tmat);
-    	var tmat_arr = new Float32Array(tmat.data64F);
-    	mat1.delete()
-    	mat2.delete();
-    	tmat.delete();
-      drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
-    }
+    // var blobParams = {
+    //   thresholdStep: 1000,
+    //   minThreshold: 200,
+    //   maxThreshold: 256,
+    //   filterByColor: true,
+    //   blobColor: 255,
+    //   filterByArea: true,
+    //   minArea: params["mina"],
+    //   maxArea: params["maxa"],
+    //   filterByCircularity: false,
+    //   faster: true
+    // };
+    //
+    // var src = cv.matFromArray(mask_size.h, mask_size.w, cv.CV_8UC4, pixels);
+    // var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+    // cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    // var blobs = findBlobs(gray, blobParams);
+    // for (var i = 0; i < blobs.length; i++) {
+    //   blobs[i].x /= mask_size.w;
+    //   blobs[i].y /= mask_size.h;
+    //   blobs[i].w /= mask_size.w;
+    //   blobs[i].h /= mask_size.h;
+    // }
+    // if (isSettings) {
+    //   blobsElm.innerHTML = blobs.length;
+    // }
+    //
+    // ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
+    // // cv.imshow("cv", gray);
+    // src.delete()
+    // gray.delete()
+    // if (isSettings) drawBlobs(blobs,"yellow");
+    // var posterINDEX = posterId(blobs)
+    // if (posterINDEX > 0 && !isSettings) {
+    //   // console.log(posterINDEX);
+    //   // var [nb,v] = normblobs(blobs);
+    //   // fillBlobs(nb,"red");
+    //   corners = detectCorners(blobs, posterINDEX);
+    //   // fillBlobs(corners,"blue");
+    //   var origin = o_pins[posterINDEX-1];
+    //   var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+    //   for (var i = 0; i < trans.length; i++) {
+    //     trans[i] = trans[i]*2-1;
+    //   }
+    //   test_points = trans;
+    //   var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
+    //   var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
+    // 	var tmat = cv.getPerspectiveTransform(mat1, mat2);
+    // 	cv.transpose(tmat, tmat);
+    // 	var tmat_arr = new Float32Array(tmat.data64F);
+    // 	mat1.delete()
+    // 	mat2.delete();
+    // 	tmat.delete();
+    //   drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
+    // }
     time += 1/60;
     requestAnimationFrame(draw);
   }
