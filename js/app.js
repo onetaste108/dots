@@ -3,7 +3,7 @@ test_points = [];
 
 var params = {
   min_screen: 720,
-  max_size: 1024,
+  max_size: 512,
   hl: 0.0,
   hu: 0.6,
   sl: 0.5,
@@ -57,8 +57,11 @@ async function init_video() {
   window.onload = function() {
     var constrains = {
       video: {
-        facingMode: "environment"
-      }
+        facingMode: "environment",
+        width: { ideal: 720 },
+        height: { ideal: 1024 }
+      },
+      audio: false
     };
     navigator.mediaDevices
       .getUserMedia(constrains)
@@ -164,8 +167,8 @@ function main() {
       u_hsv_l: [params.hl, params.sl, params.vl],
       u_hsv_u: [params.hu, params.su, params.vu],
       u_resolution: [screen_size.w, screen_size.h],
-      tex_resolution: [video_size.w, video_size.h],
-      u_fill: 0,
+      u_texResolution: [video_size.w, video_size.h],
+      u_fill: 1,
       u_tex: tex_main,
       u_flip: -1,
       u_mode: NORMAL,
@@ -247,17 +250,16 @@ function main() {
     fboIndex = 0;
 
     capture();
-    // if (params.d == 0) drawCurrent();
-    // for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
-    // if (params.d == 1) drawCurrent();
-    // applyFilter(HSV_CLIP);
-    // if (params.d == 2) drawCurrent();
-    // for (var i = 0; i < params.e; i++) {
-    //   applyFilter(ERODE);
-    //   applyFilter(DILATE);
-    // }
-    // var pixels = grabPixels();
-    // if (params.d == 4) drawCurrent();
+    for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
+    if (params.d == 1) drawCurrent();
+    applyFilter(HSV_CLIP);
+    if (params.d == 2) drawCurrent();
+    for (var i = 0; i < params.e; i++) {
+      applyFilter(ERODE);
+      applyFilter(DILATE);
+    }
+    var pixels = grabPixels();
+    if (params.d == 3) drawCurrent();
 
 
     // var blobParams = {
