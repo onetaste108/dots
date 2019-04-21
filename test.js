@@ -1,31 +1,28 @@
-init_controls();
-function draw() {
+var videoIsLoaded = false;
+var video;
 
-  // update_sliders();
-  requestAnimationFrame(draw);
+async function init_video() {
+  video = document.querySelector("#video");
+  window.onload = function() {
+    var constrains = {
+      video: {
+        facingMode: "environment"
+      }
+    };
+    navigator.mediaDevices
+      .getUserMedia(constrains)
+      .then(function(stream) {
+        track = stream.getTracks()[0];
+        video.srcObject = stream;
+        video.oncanplay = ()=>{videoIsLoaded=true;};
+      }).catch(function(error) {
+        no_video();
+      });
+  }
 }
-function update_sliders() {
-  // vals = range.noUiSlider.get();
-  // ts[0].innerHTML = vals[0];
-  // ts[1].innerHTML = vals[1];
+function no_video() {
+  video = new Image;
+  video.src = "data/3.png";
+  video.onload = ()=>{videoIsLoaded=true;};
 }
-draw()
-
-function init_controls() {
-
-  var sh = document.getElementById("sh");
-  var thl = document.getElementById("thl");
-  var thu = document.getElementById("thu");
-  noUiSlider.create(sh, {start: [0,1], range: {'min': [0], 'max': [1]}, connect: true});
-
-  // var ss = document.getElementById("ss");
-  // var tsl = document.getElementById("tsl");
-  // var tsu = document.getElementById("tsu");
-  // noUiSlider.create(ss, {start: [0,1], range: {'min': [0], 'max': [1]}, connect: true});
-  //
-  // var sv = document.getElementById("sv");
-  // var tvl = document.getElementById("tvl");
-  // var tvu = document.getElementById("tvu");
-  // noUiSlider.create(sv, {start: [0,1], range: {'min': [0], 'max': [1]}, connect: true});
-
-}
+init_video();

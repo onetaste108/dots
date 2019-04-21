@@ -1,17 +1,3 @@
-// Port of https://github.com/opencv/opencv/blob/a50a355/modules/features2d/src/blobdetector.cpp
-// But with special `faster` option which has slightly different semantics,
-// but is a whole bunch faster.
-
-function diff(v1, v2) {
-  if (v1.x !== undefined) return { x: v1.x - v2.x, y: v1.y - v2.y };
-  return v1.map((value, index) => value - v2[index]);
-}
-
-function norm(vector) {
-  if (vector.x !== undefined) return norm([vector.x, vector.y]);
-  return Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
-}
-
 const defaultParams = {
   filterByColor: true,
   blobColor: 255,
