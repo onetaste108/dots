@@ -328,7 +328,7 @@ function get_blobs(pixels, par) {
   }
   src.delete()
   gray.delete()
-
+  return blobs;
 }
 
 function detectCorners(blobs, pId) {
