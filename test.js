@@ -25,4 +25,12 @@ init_video();
 
 var canvas = document.querySelector("#canvas");
 var ctx = canvas.getContext("2d");
-ctx.drawImage(video, 300,300);
+var time = 0;
+function draw() {
+  ctx.fillRect(0+time,0,10,10);
+  ctx.drawImage(video, 0,0,300,300);
+  requestAnimationFrame(draw);
+  time += 1;
+}
+
+draw();
