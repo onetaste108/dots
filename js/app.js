@@ -80,7 +80,7 @@ function no_video() {
   video.onload = ()=>{videoIsLoaded=true;};
 }
 init_video();
-cv['onRuntimeInitialized'] = () => {main();}
+// cv['onRuntimeInitialized'] = () => {main();}
 
 function main() {
   // SETUP GL -----------------------------------------------------------------
