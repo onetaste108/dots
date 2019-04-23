@@ -73,7 +73,7 @@ function draw() {
     u_tex: tex
   });
   ctx.drawImage(video, 0,0,300,300);
-  twgl.setTextureFromElement(gl, tex, canvas2d);
+  twgl.setTextureFromElement(gl, tex, video);
   twgl.drawBufferInfo(gl, bufferInfo);
   var pixels = new Uint8Array(300 * 300 * 4);
   gl.readPixels(0, 0, 300, 300, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
