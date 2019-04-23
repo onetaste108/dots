@@ -20,3 +20,5 @@ async function init_video() {
       });
   }
 }
+
+init_video();
