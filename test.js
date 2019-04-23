@@ -22,3 +22,7 @@ async function init_video() {
 }
 
 init_video();
+
+var canvas = document.querySelector("#canvas");
+var ctx = canvas.getContext("2d");
+ctx.drawImage(video, 300,300);
