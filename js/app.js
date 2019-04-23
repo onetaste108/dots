@@ -283,9 +283,9 @@ function main() {
 };
 
 function get_matrix(blobs, pId) {
-  corners = detectCorners(blobs, pId);
-  var origin = o_pins[pId-1];
-  var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+  var corners = detectCorners(blobs, pId);
+  var origin = poster_data[pId].corners;
+  var trans = [corners[1].x, corners[1].y,corners[2].x, corners[2].y, corners[3].x, corners[3].y, corners[4].x, corners[4].y];
   for (var i = 0; i < trans.length; i++) {
     trans[i] = trans[i]*2-1;
   }
