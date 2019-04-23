@@ -137,6 +137,8 @@ function main() {
   }
   var [posterTextures, posterImages] = load_posters(poster_data);
 
+  ptxs = posterTextures;
+
   // CREATE TEXTURES ----------------------------------------------------------
   var tex_main = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
   var tex_filter = [];
@@ -202,9 +204,9 @@ function main() {
     twgl.setUniforms(programInfo, { u_flip: 1 });
   }
 
-  function drawPoster(matrix, id) {
+  function drawPoster(matrix, tex) {
     twgl.bindFramebufferInfo(gl);
-    twgl.setUniforms(programInfo, { u_tex: posterTextures[id], u_mode: PROJECT, u_tmat: matrix});
+    twgl.setUniforms(programInfo, { u_tex: tex, u_mode: PROJECT, u_tmat: matrix});
     twgl.drawBufferInfo(gl, bufferInfo);
   }
 
