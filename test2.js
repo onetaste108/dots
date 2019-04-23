@@ -87,9 +87,7 @@ function main() {
   var canvas = document.querySelector("#canvas");
   var canvas2d = document.querySelector("#canvas2d");
   var cv_canvas = document.querySelector("#cv");
-  var ctx = cv_canvas.getContext("2d");
   var gl = canvas.getContext("webgl");
-  var gl2d = canvas2d.getContext("2d");
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   var programInfo = twgl.createProgramInfo(gl, [vs, fs]);
@@ -123,35 +121,35 @@ function main() {
   }
   update_screen_size();
 
-  // LOAD POSTERS -------------------------------------------------------------
-  function load_posters(pd) {
-    var pts = [];
-    var pimgs = [];
-    for (var i = 0; i < pd.length; i++) {
-      var pt = twgl.createTexture(gl, {width: 1, height: 1});
-      var pimg = new Image();
-      pimg.src = "data/1.1.png";
-      pimg.onload = () => { twgl.setTextureFromElement(gl, pt, pimg, {minMag:gl.LINEAR}); };
-      pts.push(pt);
-      pimgs.push(pimg);
-    }
-    return [pts, pimgs];
-  }
-  var [posterTextures, posterImages] = load_posters(poster_data);
-
-  ptxs = posterTextures;
-
-  // CREATE TEXTURES ----------------------------------------------------------
+  // // LOAD POSTERS -------------------------------------------------------------
+  // function load_posters(pd) {
+  //   var pts = [];
+  //   var pimgs = [];
+  //   for (var i = 0; i < pd.length; i++) {
+  //     var pt = twgl.createTexture(gl, {width: 1, height: 1});
+  //     var pimg = new Image();
+  //     pimg.src = "data/1.1.png";
+  //     pimg.onload = () => { twgl.setTextureFromElement(gl, pt, pimg, {minMag:gl.LINEAR}); };
+  //     pts.push(pt);
+  //     pimgs.push(pimg);
+  //   }
+  //   return [pts, pimgs];
+  // }
+  // var [posterTextures, posterImages] = load_posters(poster_data);
+  //
+  // ptxs = posterTextures;
+  //
+  // // CREATE TEXTURES ----------------------------------------------------------
   var tex_main = twgl.createTexture(gl, {width: screen_size.w, height: screen_size.h});
-  var tex_filter = [];
-  var fbo_filter = [];
-  for (var i = 0; i < 2; i++) {
-    tex_filter.push( twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h}) );
-    fbo_filter.push( twgl.createFramebufferInfo(gl, [{attachment: tex_filter[i]}],  mask_size.w,  mask_size.h) );
-  }
-  var fboIndex = 0;
-
-  twgl.setUniforms(programInfo, { blurk: blurk });
+  // var tex_filter = [];
+  // var fbo_filter = [];
+  // for (var i = 0; i < 2; i++) {
+  //   tex_filter.push( twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h}) );
+  //   fbo_filter.push( twgl.createFramebufferInfo(gl, [{attachment: tex_filter[i]}],  mask_size.w,  mask_size.h) );
+  // }
+  // var fboIndex = 0;
+  //
+  // twgl.setUniforms(programInfo, { blurk: blurk });
 
   // DRAWING FUNCTIONS --------------------------------------------------------
   var time = 0;
@@ -165,8 +163,7 @@ function main() {
     } else {
       video_size = screen_size;
     }
-    if (videoIsLoaded) gl2d.drawImage(video,0,0);
-    if (videoIsLoaded) twgl.setTextureFromElement(gl, tex_main, canvas2d, {level:0});
+    if (videoIsLoaded) twgl.setTextureFromElement(gl, tex_main, video);
     twgl.bindFramebufferInfo(gl);
     twgl.setUniforms(programInfo, {
       u_hsv_l: [params.hl, params.sl, params.vl],
@@ -180,106 +177,106 @@ function main() {
       u_angle: 0
     });
     twgl.drawBufferInfo(gl, bufferInfo);
-    twgl.bindFramebufferInfo(gl, fbo_filter[0]);
-    twgl.setUniforms(programInfo, {
-      u_resolution: [mask_size.w, mask_size.h],
-      u_flip: 1,
-    });
-    twgl.drawBufferInfo(gl, bufferInfo);
-    twgl.setUniforms(programInfo, {
-      u_fill: 0,
-      u_angle: 0
-    });
+    // twgl.bindFramebufferInfo(gl, fbo_filter[0]);
+    // twgl.setUniforms(programInfo, {
+    //   u_resolution: [mask_size.w, mask_size.h],
+    //   u_flip: 1,
+    // });
+    // twgl.drawBufferInfo(gl, bufferInfo);
+    // twgl.setUniforms(programInfo, {
+    //   u_fill: 0,
+    //   u_angle: 0
+    // });
   }
 
-  function applyFilter(n) {
-    var fboIndex_next = (fboIndex+1)%2;
-    twgl.bindFramebufferInfo(gl, fbo_filter[fboIndex_next]);
-    twgl.setUniforms(programInfo, { u_tex: tex_filter[fboIndex], u_mode: n});
-    twgl.drawBufferInfo(gl, bufferInfo);
-    fboIndex = fboIndex_next;
-  }
-
-  function drawCurrent() {
-    twgl.bindFramebufferInfo(gl);
-    twgl.setUniforms(programInfo, { u_tex: tex_filter[fboIndex], u_mode: NORMAL, u_flip: -1});
-    twgl.drawBufferInfo(gl, bufferInfo);
-    twgl.setUniforms(programInfo, { u_flip: 1 });
-  }
-
-  function drawPoster(matrix, tex) {
-    twgl.bindFramebufferInfo(gl);
-    twgl.setUniforms(programInfo, { u_tex: tex, u_mode: PROJECT, u_tmat: matrix});
-    twgl.drawBufferInfo(gl, bufferInfo);
-  }
-
-  function grabPixels() {
-    var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
-    gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    return pixels;
-  }
-
-
-  function drawBlobs(blobs, color) {
-    for (var i = 0; i < blobs.length; i++) {
-      ctx.strokeStyle = "black";
-      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w-1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h-1, blobs[i].w*screen_size.w+2, blobs[i].h*screen_size.h+2);
-      ctx.strokeStyle = color;
-      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
-      ctx.strokeStyle = "black";
-      ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w+1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h+1, blobs[i].w*screen_size.w-2, blobs[i].h*screen_size.h-2);
-    }
-  }
-  function fillBlobs(blobs, color) {
-    for (var i = 0; i < blobs.length; i++) {
-      ctx.fillStyle = color;
-      ctx.fillRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
-    }
-  }
+  // function applyFilter(n) {
+  //   var fboIndex_next = (fboIndex+1)%2;
+  //   twgl.bindFramebufferInfo(gl, fbo_filter[fboIndex_next]);
+  //   twgl.setUniforms(programInfo, { u_tex: tex_filter[fboIndex], u_mode: n});
+  //   twgl.drawBufferInfo(gl, bufferInfo);
+  //   fboIndex = fboIndex_next;
+  // }
+  //
+  // function drawCurrent() {
+  //   twgl.bindFramebufferInfo(gl);
+  //   twgl.setUniforms(programInfo, { u_tex: tex_filter[fboIndex], u_mode: NORMAL, u_flip: -1});
+  //   twgl.drawBufferInfo(gl, bufferInfo);
+  //   twgl.setUniforms(programInfo, { u_flip: 1 });
+  // }
+  //
+  // function drawPoster(matrix, tex) {
+  //   twgl.bindFramebufferInfo(gl);
+  //   twgl.setUniforms(programInfo, { u_tex: tex, u_mode: PROJECT, u_tmat: matrix});
+  //   twgl.drawBufferInfo(gl, bufferInfo);
+  // }
+  //
+  // function grabPixels() {
+  //   var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
+  //   gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  //   return pixels;
+  // }
+  //
+  //
+  // function drawBlobs(blobs, color) {
+  //   for (var i = 0; i < blobs.length; i++) {
+  //     ctx.strokeStyle = "black";
+  //     ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w-1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h-1, blobs[i].w*screen_size.w+2, blobs[i].h*screen_size.h+2);
+  //     ctx.strokeStyle = color;
+  //     ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
+  //     ctx.strokeStyle = "black";
+  //     ctx.strokeRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w+1, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h+1, blobs[i].w*screen_size.w-2, blobs[i].h*screen_size.h-2);
+  //   }
+  // }
+  // function fillBlobs(blobs, color) {
+  //   for (var i = 0; i < blobs.length; i++) {
+  //     ctx.fillStyle = color;
+  //     ctx.fillRect(blobs[i].x*screen_size.w-blobs[i].w/2*screen_size.w, blobs[i].y*screen_size.h-blobs[i].h/2*screen_size.h, blobs[i].w*screen_size.w, blobs[i].h*screen_size.h);
+  //   }
+  // }
 
 
 
   // DRAW LOOP ----------------------------------------------------------------
   var lastTime = new Date();
   function draw() {
-    if (isSettings) {
-      var newTime = new Date();
-      var fps = Math.round(10000 / (newTime - lastTime))/10;
-      fpsElm.innerHTML = fps;
-      lastTime = newTime;
-
-      insizeElm.innerHTML = video.videoWidth+" "+video.videoHeight;
-      rensizeElm.innerHTML = screen_size.w + " " + screen_size.h;
-      psizeElm.innerHTML = mask_size.w + " " + mask_size.h;
-    }
-    fboIndex = 0;
+    // if (isSettings) {
+    //   var newTime = new Date();
+    //   var fps = Math.round(10000 / (newTime - lastTime))/10;
+    //   fpsElm.innerHTML = fps;
+    //   lastTime = newTime;
+    //
+    //   insizeElm.innerHTML = video.videoWidth+" "+video.videoHeight;
+    //   rensizeElm.innerHTML = screen_size.w + " " + screen_size.h;
+    //   psizeElm.innerHTML = mask_size.w + " " + mask_size.h;
+    // }
+    // fboIndex = 0;
 
     capture();
-    for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
-    if (params.d == 1) drawCurrent();
-    applyFilter(HSV_CLIP);
-    if (params.d == 2) drawCurrent();
-    for (var i = 0; i < params.e; i++) {
-      applyFilter(ERODE);
-      applyFilter(DILATE);
-    }
-    var pixels = grabPixels();
-    if (params.d == 3) drawCurrent();
-
-    var blobs =  get_blobs(pixels, params);
-
-    if (isSettings) blobsElm.innerHTML = blobs.length;
-    if (isSettings) drawBlobs(blobs,"yellow");
-
-    ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
-
-    var pId = posterId(blobs);
-    if (pId > 0 && !isSettings) {
-      var u_transformMat = get_matrix(blobs, pId);
-      drawPoster(u_transformMat, posterTextures[pId-1]);
-    }
-
-    time += 1/60;
+    // for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
+    // if (params.d == 1) drawCurrent();
+    // applyFilter(HSV_CLIP);
+    // if (params.d == 2) drawCurrent();
+    // for (var i = 0; i < params.e; i++) {
+    //   applyFilter(ERODE);
+    //   applyFilter(DILATE);
+    // }
+    // var pixels = grabPixels();
+    // if (params.d == 3) drawCurrent();
+    //
+    // var blobs =  get_blobs(pixels, params);
+    //
+    // if (isSettings) blobsElm.innerHTML = blobs.length;
+    // if (isSettings) drawBlobs(blobs,"yellow");
+    //
+    // ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
+    //
+    // var pId = posterId(blobs);
+    // if (pId > 0 && !isSettings) {
+    //   var u_transformMat = get_matrix(blobs, pId);
+    //   drawPoster(u_transformMat, posterTextures[pId-1]);
+    // }
+    //
+    // time += 1/60;
     requestAnimationFrame(draw);
   }
   hide_loading();
