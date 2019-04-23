@@ -1,6 +1,28 @@
 test_points = [];
 
 
+var vs2 = `
+precision mediump float;
+
+attribute vec2 a_pos;
+attribute vec2 a_texCoord;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_texCoord;
+  gl_Position = vec4(a_pos,0.0,1.0);
+}
+`;
+
+var fs2 = `
+precision mediump float;
+varying vec2 v_texCoord;
+uniform sampler2D u_tex;
+void main() {
+  gl_FragColor = texture2D(u_tex,v_texCoord);
+  // gl_FragColor = vec4(1,0,0,1);
+}
+`;
+
 var params = {
   min_screen: 720,
   max_size: 512,
@@ -80,7 +102,7 @@ function no_video() {
   // video.onload = ()=>{videoIsLoaded=true;};
 }
 init_video();
-cv['onRuntimeInitialized'] = () => {main();}
+cv['onRuntimeInitialized'] = () => {main();};
 
 function main() {
   // SETUP GL -----------------------------------------------------------------
