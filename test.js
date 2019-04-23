@@ -78,4 +78,4 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-draw();
+cv['onRuntimeInitialized'] = () => {draw();};
