@@ -285,7 +285,7 @@ function main() {
 function get_matrix(blobs, pId) {
   var corners = detectCorners(blobs, pId);
   var origin = poster_data[pId].corners;
-  var trans = [corners[1].x, corners[1].y,corners[2].x, corners[2].y, corners[3].x, corners[3].y, corners[4].x, corners[4].y];
+  var trans = [corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y];
   for (var i = 0; i < trans.length; i++) {
     trans[i] = trans[i]*2-1;
   }
