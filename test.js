@@ -75,6 +75,14 @@ function draw() {
   ctx.drawImage(video, 0,0,300,300);
   twgl.setTextureFromElement(gl, tex, canvas2d);
   twgl.drawBufferInfo(gl, bufferInfo);
+  var pixels = new Uint8Array(300 * 300 * 4);
+  gl.readPixels(0, 0, 300, 300, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  var src = cv.matFromArray(300, 300, cv.CV_8UC4, pixels);
+  var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  src.delete()
+  gray.delete()
+
   requestAnimationFrame(draw);
 }
 
