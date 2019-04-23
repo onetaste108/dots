@@ -58,8 +58,8 @@ async function init_video() {
     var constrains = {
       video: {
         facingMode: "environment",
-        width: { ideal: 720 },
-        height: { ideal: 1024 }
+        // width: { ideal: 720 },
+        // height: { ideal: 1024 }
       },
       audio: false
     };
@@ -80,7 +80,7 @@ function no_video() {
   video.onload = ()=>{videoIsLoaded=true;};
 }
 init_video();
-// cv['onRuntimeInitialized'] = () => {main();}
+cv['onRuntimeInitialized'] = () => {main();}
 
 function main() {
   // SETUP GL -----------------------------------------------------------------
