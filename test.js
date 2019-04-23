@@ -44,10 +44,9 @@ async function init_video() {
   }
 }
 init_video();
+
 var video = document.querySelector("#video");
-var canvas2d = document.querySelector("#canvas2d");
 var canvas = document.querySelector("#canvas");
-var ctx = canvas2d.getContext("2d");
 var gl = canvas.getContext("webgl");
 
 var programInfo = twgl.createProgramInfo(gl, [vs, fs]);
@@ -72,8 +71,7 @@ function draw() {
   twgl.setUniforms(programInfo, {
     u_tex: tex
   });
-  ctx.drawImage(video, 0,0,300,300);
-  twgl.setTextureFromElement(gl, tex, video);
+  twgl.setTextureFromElement(gl, tex, video, {level:0});
   twgl.drawBufferInfo(gl, bufferInfo);
   var pixels = new Uint8Array(300 * 300 * 4);
   gl.readPixels(0, 0, 300, 300, gl.RGBA, gl.UNSIGNED_BYTE, pixels);

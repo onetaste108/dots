@@ -2,15 +2,20 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
-    <script src="js/twgl-full.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printer Dots</title>
+    <link rel="stylesheet" href="style.css">
   </head>
-  <body>
-    <video id="video" style="visibility: hidden;" width="300" height="300" autoplay loop playsinline muted controls></video><br>
-    <canvas id="canvas2d" width="300" height="300"></canvas><br>
+
+  <body id="body">
+    <video id="video" autoplay loop playsinline controls></video>
     <canvas id="canvas" width="300" height="300"></canvas>
+
+    <script src="js/twgl-full.min.js"></script>
     <script src="js/opencv.js"></script>
+    <script src="js/blob_detector.js"></script>
+    <script src="js/shaders.js"></script>
+    <script src="js/poster_data.js"></script>
     <script src="test.js"></script>
   </body>
 </html>
