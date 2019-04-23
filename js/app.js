@@ -261,62 +261,19 @@ function main() {
     var pixels = grabPixels();
     if (params.d == 3) drawCurrent();
 
+    var blobs =  get_blobs(pixels, params);
 
-    // var blobParams = {
-    //   thresholdStep: 1000,
-    //   minThreshold: 200,
-    //   maxThreshold: 256,
-    //   filterByColor: true,
-    //   blobColor: 255,
-    //   filterByArea: true,
-    //   minArea: params["mina"],
-    //   maxArea: params["maxa"],
-    //   filterByCircularity: false,
-    //   faster: true
-    // };
-    //
-    // var src = cv.matFromArray(mask_size.h, mask_size.w, cv.CV_8UC4, pixels);
-    // var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
-    // cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    // var blobs = findBlobs(gray, blobParams);
-    // for (var i = 0; i < blobs.length; i++) {
-    //   blobs[i].x /= mask_size.w;
-    //   blobs[i].y /= mask_size.h;
-    //   blobs[i].w /= mask_size.w;
-    //   blobs[i].h /= mask_size.h;
-    // }
-    // if (isSettings) {
-    //   blobsElm.innerHTML = blobs.length;
-    // }
-    //
-    // ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
-    // // cv.imshow("cv", gray);
-    // src.delete()
-    // gray.delete()
-    // if (isSettings) drawBlobs(blobs,"yellow");
-    // var posterINDEX = posterId(blobs)
-    // if (posterINDEX > 0 && !isSettings) {
-    //   // console.log(posterINDEX);
-    //   // var [nb,v] = normblobs(blobs);
-    //   // fillBlobs(nb,"red");
-    //   corners = detectCorners(blobs, posterINDEX);
-    //   // fillBlobs(corners,"blue");
-    //   var origin = o_pins[posterINDEX-1];
-    //   var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
-    //   for (var i = 0; i < trans.length; i++) {
-    //     trans[i] = trans[i]*2-1;
-    //   }
-    //   test_points = trans;
-    //   var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
-    //   var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
-    // 	var tmat = cv.getPerspectiveTransform(mat1, mat2);
-    // 	cv.transpose(tmat, tmat);
-    // 	var tmat_arr = new Float32Array(tmat.data64F);
-    // 	mat1.delete()
-    // 	mat2.delete();
-    // 	tmat.delete();
-    //   drawPoster(tmat_arr, posterTextures[posterINDEX-1]);
-    // }
+    if (isSettings) blobsElm.innerHTML = blobs.length;
+    if (isSettings) drawBlobs(blobs,"yellow");
+
+    ctx.clearRect(0,0, cv_canvas.width, cv_canvas.height);
+
+    var pId = posterId(blobs);
+    if (pId > 0 && !isSettings) {
+      var u_transformMat = get_matrix(blobs, pId);
+      drawPoster(tmat_arr, posterTextures[pId-1]);
+    }
+    
     time += 1/60;
     requestAnimationFrame(draw);
   }
@@ -324,6 +281,55 @@ function main() {
   draw();
 
 };
+
+function get_corners(blobs, pId) {
+  corners = detectCorners(blobs, pId);
+  var origin = o_pins[pId-1];
+  var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
+  for (var i = 0; i < trans.length; i++) {
+    trans[i] = trans[i]*2-1;
+  }
+  test_points = trans;
+  var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
+  var mat2 = cv.matFromArray(4, 2, cv.CV_32F, trans);
+  var tmat = cv.getPerspectiveTransform(mat1, mat2);
+  cv.transpose(tmat, tmat);
+  var tmat_arr = new Float32Array(tmat.data64F);
+  mat1.delete()
+  mat2.delete();
+  tmat.delete();
+  return tmat_arr;
+}
+
+function get_blobs(pixels, par) {
+  var blobParams = {
+    thresholdStep: 1000,
+    minThreshold: 200,
+    maxThreshold: 256,
+    filterByColor: true,
+    blobColor: 255,
+    filterByArea: true,
+    minArea: par["mina"],
+    maxArea: par["maxa"],
+    filterByCircularity: false,
+    faster: true
+  };
+
+  var src = cv.matFromArray(mask_size.h, mask_size.w, cv.CV_8UC4, pixels);
+  var gray = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  var blobs = findBlobs(gray, blobParams);
+
+  for (var i = 0; i < blobs.length; i++) {
+    blobs[i].x /= mask_size.w;
+    blobs[i].y /= mask_size.h;
+    blobs[i].w /= mask_size.w;
+    blobs[i].h /= mask_size.h;
+  }
+  src.delete()
+  gray.delete()
+
+}
 
 function detectCorners(blobs, pId) {
   var [nb, nvals] = normblobs(blobs);
@@ -446,7 +452,6 @@ function detectCorners(blobs, pId) {
   return corners;
 }
 
-
 function normblobs(blobs) {
   var nb = [];
   var maxx = 0;
@@ -498,15 +503,6 @@ function posterId(blobs) {
 		postern = 1;
 	}
   return postern;
-}
-
-function sortBlobs(ref, blobs) {
-  var sorted = [];
-  var values = [];
-  for (var i = 0; i < blobs.length; i++) {
-
-  }
-
 }
 
 function dist(v1, v2) {
