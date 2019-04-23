@@ -282,7 +282,7 @@ function main() {
 
 };
 
-function get_corners(blobs, pId) {
+function get_matrix(blobs, pId) {
   corners = detectCorners(blobs, pId);
   var origin = o_pins[pId-1];
   var trans = [ corners[1-1].x, corners[1-1].y,corners[2-1].x, corners[2-1].y, corners[3-1].x, corners[3-1].y, corners[4-1].x, corners[4-1].y];
