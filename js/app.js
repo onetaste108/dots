@@ -271,9 +271,9 @@ function main() {
     var pId = posterId(blobs);
     if (pId > 0 && !isSettings) {
       var u_transformMat = get_matrix(blobs, pId);
-      drawPoster(tmat_arr, posterTextures[pId-1]);
+      drawPoster(u_transformMat, posterTextures[pId-1]);
     }
-    
+
     time += 1/60;
     requestAnimationFrame(draw);
   }
