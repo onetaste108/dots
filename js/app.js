@@ -199,30 +199,30 @@ function draw() {
   // GET BLOBS ----------------------------------------------------------------
 
   grabPixels();
-  // if (params.show_mask) drawCurrent();
-  // var blobs =  get_blobs(pixels, mask_size, params);
-  // var pId = get_poster_id(blobs);
-  //
-  // ctx.clearRect(0, 0, render_size.w, render_size.h);
-  // if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
+  if (params.show_mask) drawCurrent();
+  var blobs =  get_blobs(pixels, mask_size, params);
+  var pId = get_poster_id(blobs);
 
-  // --------------------------------------------------------------------------
-  //
-  // // GET MATRIX ---------------------------------------------------------------
-  //
-  // if (pId >= 0) {
-  //   var corners = detectCorners(blobs, pId);
-  //   t_corners = corners;
-  //   if (params.show_corners) fillBlobs(ctx, corners, render_size, "red");
-  //   if (params.draw_poster) {
-  //     console.log()
-  //     var matrix = get_matrix(corners, poster_data, pId);
-  //
-  //   // DRAW POSTER ------------------------------------------------------------
-  //
-  //     drawPoster(matrix, posterTextures[pId]);
-  //   }
-  // }
+  ctx.clearRect(0, 0, render_size.w, render_size.h);
+  if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
+
+  --------------------------------------------------------------------------
+
+  // GET MATRIX ---------------------------------------------------------------
+
+  if (pId >= 0) {
+    var corners = detectCorners(blobs, pId);
+    t_corners = corners;
+    if (params.show_corners) fillBlobs(ctx, corners, render_size, "red");
+    if (params.draw_poster) {
+      console.log()
+      var matrix = get_matrix(corners, poster_data, pId);
+
+    // DRAW POSTER ------------------------------------------------------------
+
+      drawPoster(matrix, posterTextures[pId]);
+    }
+  }
 
   // --------------------------------------------------------------------------
   time += 1/60;
