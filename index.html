@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ahh</title>
+    <title>Printer Dots</title>
     <script type="text/javascript">
       var loading_image = new Image();
       loading_image.src = "data/load.gif";
@@ -13,9 +13,9 @@
   </head>
 
   <body id="body">
-    <video id="video" autoplay loop playsinline controls></video>
+    <video id="video" autoplay loop playsinline muted></video>
     <canvas id="canvas" width="720" height="1280"></canvas>
-    <canvas id="cv" width="720" height="1280"></canvas>
+    <canvas id="canvas2d" width="720" height="1280"></canvas>
 
     <div id="loadscreen">
       <img id="loadcircle" src="data/load.gif" alt="loading"></img>
@@ -83,7 +83,9 @@
     <img id="settings" src="data/gear_icon.svg" onclick="toggle_settings();"></img>
 
     <script src="js/opencv.js"></script>
+    <script src="js/html.js"></script>
     <script src="js/blob_detector.js"></script>
+    <script src="js/blobs.js"></script>
     <script src="js/shaders.js"></script>
     <script src="js/poster_data.js"></script>
     <script src="js/app.js"></script>

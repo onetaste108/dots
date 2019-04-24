@@ -181,3 +181,51 @@ var blurk = [
                   0.015019,0.059912,0.094907,0.059912,0.015019,
                   0.003765,0.015019,0.023792,0.015019,0.003765
                ];
+
+function setup_gl(canvas) {
+  var gl = canvas.getContext("webgl");
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  var programInfo = twgl.createProgramInfo(gl, [vs, fs]);
+  var arrays = {
+    a_pos: {
+      numComponents: 2,
+      data: [-1,-1,  -1, 1,   1,-1,  -1, 1,  1,-1,   1, 1]
+    },
+    a_texCoord: {
+      numComponents: 2,
+      data: [0,0, 0,1, 1,0, 0,1, 1,0, 1,1]
+    }
+  }
+  var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+  gl.useProgram(programInfo.program);
+  twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+  twgl.setUniforms(programInfo, { blurk: blurk });
+
+  return [gl, programInfo, bufferInfo];
+}
+
+function load_posters(gl, pd) {
+  var pts = [];
+  var pimgs = [];
+  for (var i = 0; i < pd.length; i++) {
+    var pt = twgl.createTexture(gl, {width: 100, height: 100});
+    var pimg = new Image();
+    pimg.src = pd[i].hidden;
+    pimg.onload = () => { twgl.setTextureFromElement(gl, pt, pimg, {level:0}); };
+    pts.push(pt);
+    pimgs.push(pimg);
+  }
+  return [pts, pimgs];
+}
+
+function create_textures(gl, mask_size, render_size) {
+  var tex_main = twgl.createTexture(gl, {width: render_size.w, height: render_size.h});
+  var tex_filter = [];
+  var fbo_filter = [];
+  for (var i = 0; i < 2; i++) {
+    tex_filter.push( twgl.createTexture(gl, {width: mask_size.w, height: mask_size.h}) );
+    fbo_filter.push( twgl.createFramebufferInfo(gl, [{attachment: tex_filter[i]}],  mask_size.w,  mask_size.h) );
+  }
+  return [tex_main, tex_filter, fbo_filter];
+}
