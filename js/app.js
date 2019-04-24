@@ -1,3 +1,6 @@
+// NOTES
+// cv.mat ---
+
 // PARAMETERS -----------------------------------------------------------------
 
 var params = {
@@ -12,10 +15,13 @@ var params = {
   d: 0,
   mina: 10,
   maxa: 10000,
+  draw_poster: true,
   show_detecton: true,
   show_corners: true,
   show_mask: false,
-  testing: true
+  testing: false,
+  test_rotation: false,
+  test_matrix: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -40,7 +46,8 @@ cv['onRuntimeInitialized'] = () => {on_ready_cv();};
 
 var waitingId;
 function wait() {
-  var ready = true;
+  var ready = false;
+  if (ready_cv) ready = true;
   if (ready) {
     clearInterval(waitingId);
     hide_loading();
@@ -55,7 +62,7 @@ if (!params.testing) {
   init_video(video);
 } else {
   video = new Image();
-  video.src = "data/1.png"
+  video.src = "data/5.png"
 };
 
 // ----------------------------------------------------------------------------
@@ -102,13 +109,12 @@ var fboId;
 
 function capture() {
   var video_size;
-  var u_angle;
+  var u_angle = 0;
   if (!params.testing) {
     video_size = get_video_size(video);
-    u_angle = 0;
   } else {
     video_size = render_size;
-    u_angle = Math.sin(time*2)/3;
+    if (params.test_rotation) u_angle = Math.sin(time*2)/3;
   }
   twgl.setTextureFromElement(gl, tex_main, video, {level:0, minMag: gl.LINEAR});
   twgl.bindFramebufferInfo(gl);
@@ -198,22 +204,22 @@ function draw() {
   ctx.clearRect(0, 0, render_size.w, render_size.h);
   if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
 
-  console.log(pId);
-  console.log(blobs.length);
-
   // --------------------------------------------------------------------------
 
   // GET MATRIX ---------------------------------------------------------------
 
   if (pId >= 0) {
     var corners = detectCorners(blobs, pId);
+    t_corners = corners;
     if (params.show_corners) fillBlobs(ctx, corners, render_size, "red");
-    var matrix = get_matrix(blobs, poster_data, pId);
+    if (params.draw_poster) {
+      console.log()
+      var matrix = get_matrix(corners, poster_data, pId);
 
     // DRAW POSTER ------------------------------------------------------------
 
-    drawPoster(matrix, posterTextures[pId]);
-
+      drawPoster(matrix, posterTextures[pId]);
+    }
   }
 
   // --------------------------------------------------------------------------

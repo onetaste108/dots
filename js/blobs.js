@@ -35,7 +35,7 @@ function get_matrix(corners, pd, pId) {
   for (var i = 0; i < points.length; i++) {
     points[i] = points[i]*2-1;
   }
-  test_points = points;
+  t_points = points;
   var mat1 = cv.matFromArray(4, 2, cv.CV_32F, origin);
   var mat2 = cv.matFromArray(4, 2, cv.CV_32F, points);
   var tmat = cv.getPerspectiveTransform(mat1, mat2);
@@ -146,6 +146,7 @@ function detectCorners(blobs, pId) {
     corners.push(...ll);
     // LU
     var lu = Array.from(nb);
+    lu = lu.filter((a)=>{return a.y > 0.3});
     lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
     lu = lu.slice(0,1);
     corners.push(...lu);
@@ -175,19 +176,23 @@ function detectCorners(blobs, pId) {
     corners.push(...lu);
     // RU
     var ru = Array.from(nb);
-    ru.sort((a,b)=>{return dist({x:2.5,y:-1},a)-dist({x:2.5,y:-1},b);});
+    ru.sort((a,b)=>{return dist({x:2,y:-1},a)-dist({x:2,y:-1},b);});
     ru = ru.slice(0,1);
     corners.push(...ru);
     // LU
     var rl = Array.from(nb);
     rl.sort((a,b)=>{return dist({x:2.5,y:2.5},a)-dist({x:2.5,y:2.5},b);});
+    rl = rl.slice(0,2);
+    rl.sort((a,b)=>{return b.y-a.y;});
     rl = rl.slice(0,1);
     corners.push(...rl);
   }
   if (pId == 5) {
     // LL
     var ll = Array.from(nb);
-    ll.sort((a,b)=>{return dist({x:-1,y:2},a)-dist({x:-1,y:2},b);});
+    ll.sort((a,b)=>{return dist({x:0,y:2},a)-dist({x:0,y:2},b);});
+    ll = ll.slice(0,2);
+    ll.sort((a,b)=>{return a.x-b.x;});
     ll = ll.slice(0,1);
     corners.push(...ll);
     // LU

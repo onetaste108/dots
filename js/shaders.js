@@ -205,17 +205,57 @@ function setup_gl(canvas) {
   return [gl, programInfo, bufferInfo];
 }
 
+function set_img(gl, pt, img) {
+  // twgl.setTextureFromElement(gl, pt, img);
+  twgl.setTextureFromElement(gl, pt, img, {min:gl.LINEAR_MIPMAP_LINEAR});
+}
+
 function load_posters(gl, pd) {
   var pts = [];
   var pimgs = [];
-  for (var i = 0; i < pd.length; i++) {
-    var pt = twgl.createTexture(gl, {width: 100, height: 100});
-    var pimg = new Image();
-    pimg.src = pd[i].hidden;
-    pimg.onload = () => { twgl.setTextureFromElement(gl, pt, pimg, {level:0}); };
-    pts.push(pt);
-    pimgs.push(pimg);
-  }
+
+  var pt1 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg1 = new Image();
+  pimg1.onload = () => { set_img(gl, pt1, pimg1) };
+  pimg1.src = pd[0].hidden;
+  pts.push(pt1);
+  pimgs.push(pimg1);
+
+  var pt2 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg2 = new Image();
+  pimg2.onload = () => { set_img(gl, pt2, pimg2) };
+  pimg2.src = pd[1].hidden;
+  pts.push(pt2);
+  pimgs.push(pimg2);
+
+  var pt3 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg3 = new Image();
+  pimg3.onload = () => { set_img(gl, pt3, pimg3) };
+  pimg3.src = pd[2].hidden;
+  pts.push(pt3);
+  pimgs.push(pimg3);
+
+  var pt4 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg4 = new Image();
+  pimg4.onload = () => { set_img(gl, pt4, pimg4) };
+  pimg4.src = pd[3].hidden;
+  pts.push(pt4);
+  pimgs.push(pimg4);
+
+  var pt5 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg5 = new Image();
+  pimg5.onload = () => { set_img(gl, pt5, pimg5) };
+  pimg5.src = pd[4].hidden;
+  pts.push(pt5);
+  pimgs.push(pimg5);
+
+  var pt6 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg6 = new Image();
+  pimg6.onload = () => { set_img(gl, pt6, pimg6) };
+  pimg6.src = pd[5].hidden;
+  pts.push(pt6);
+  pimgs.push(pimg6);
+
   return [pts, pimgs];
 }
 
