@@ -4,7 +4,8 @@
 // PARAMETERS -----------------------------------------------------------------
 
 var params = {
-  mask_max: 1024,
+  mask_max: 512,
+  render_max: 1024,
   hl: 0.1,
   hu: 0.25,
   sl: 0.3, //0.4
@@ -81,13 +82,15 @@ canvas2d.onclick = ()=>{params.show_mask = !params.show_mask;};
 
 var render_size, mask_size;
 function update_render_size() {
-  render_size = {w: canvas.clientWidth, h: canvas.clientHeight};
+  var screen_size = {w: canvas.clientWidth, h: canvas.clientHeight};
+  var render_ratio = params.render_max / Math.max(screen_size.w, screen_size.h);
+  render_size = {w: Math.round(screen_size.w * render_ratio), h: Math.round(screen_size.h * render_ratio)};
   canvas.width = render_size.w;
   canvas.height = render_size.h;
   canvas2d.width = render_size.w;
   canvas2d.height = render_size.h;
-  var mask_ratio = Math.min(params.mask_max, Math.max(render_size.w, render_size.h)) / Math.max(render_size.w, render_size.h);
-  mask_size = {w: Math.round(render_size.w * mask_ratio), h: Math.round(render_size.h * mask_ratio)};
+  var mask_ratio = params.mask_max / Math.max(screen_size.w, screen_size.h);
+  mask_size = {w: Math.round(screen_size.w * mask_ratio), h: Math.round(screen_size.h * mask_ratio)};
 }
 update_render_size();
 
