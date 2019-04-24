@@ -14,7 +14,7 @@ var params = {
   vu: 1,
   b: 2,
   d: 0,
-  mina: 10,
+  mina: 1,
   maxa: 10000,
   draw_poster: true,
   show_detecton: true,
