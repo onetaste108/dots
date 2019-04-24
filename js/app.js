@@ -199,12 +199,12 @@ function draw() {
   // GET BLOBS ----------------------------------------------------------------
 
   grabPixels();
-  if (params.show_mask) drawCurrent();
-  var blobs =  get_blobs(pixels, mask_size, params);
-  var pId = get_poster_id(blobs);
-
-  ctx.clearRect(0, 0, render_size.w, render_size.h);
-  if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
+  // if (params.show_mask) drawCurrent();
+  // var blobs =  get_blobs(pixels, mask_size, params);
+  // var pId = get_poster_id(blobs);
+  //
+  // ctx.clearRect(0, 0, render_size.w, render_size.h);
+  // if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
 
   // --------------------------------------------------------------------------
   //
