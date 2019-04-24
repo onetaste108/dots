@@ -198,7 +198,7 @@ function draw() {
 
   // GET BLOBS ----------------------------------------------------------------
 
-  grabPixels();
+  // grabPixels();
   // if (params.show_mask) drawCurrent();
   // var blobs =  get_blobs(pixels, mask_size, params);
   // var pId = get_poster_id(blobs);
