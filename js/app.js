@@ -168,10 +168,9 @@ function drawPoster(matrix, tex) {
   twgl.drawBufferInfo(gl, bufferInfo);
 }
 
+var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
 function grabPixels() {
-  var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
   gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-  return pixels;
 }
 
 // ----------------------------------------------------------------------------
@@ -189,14 +188,14 @@ function draw() {
 
   // --------------------------------------------------------------------------
 
-  // // PROCESS ------------------------------------------------------------------
-  //
-  // for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
-  // applyFilter(HSV_CLIP);
-  // // drawCurrent();
-  //
-  // // --------------------------------------------------------------------------
-  //
+  // PROCESS ------------------------------------------------------------------
+
+  for (var i = 0; i < params.b; i++) { applyFilter(BLUR); }
+  applyFilter(HSV_CLIP);
+  // drawCurrent();
+
+  // --------------------------------------------------------------------------
+
   // // GET BLOBS ----------------------------------------------------------------
   //
   // var pixels = grabPixels();
@@ -208,7 +207,7 @@ function draw() {
   // if (params.show_detecton) strokeBlobs(ctx, blobs, render_size, "red");
   //
   // // --------------------------------------------------------------------------
-  // 
+  //
   // // GET MATRIX ---------------------------------------------------------------
   //
   // if (pId >= 0) {
@@ -224,8 +223,8 @@ function draw() {
   //     drawPoster(matrix, posterTextures[pId]);
   //   }
   // }
-  //
-  // // --------------------------------------------------------------------------
+
+  // --------------------------------------------------------------------------
   time += 1/60;
   requestAnimationFrame(draw);
 }
