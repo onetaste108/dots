@@ -23,6 +23,7 @@ var params = {
   testing: false,
   test_rotation: false,
   test_matrix: true,
+  redirect: true
 };
 
 // ----------------------------------------------------------------------------
@@ -34,9 +35,18 @@ var lastTime = new Date();
 var time = 0;
 
 // ----------------------------------------------------------------------------
+// SETUP VIDEO ----------------------------------------------------------------
+var video;
+if (!params.testing) {
+  video = document.querySelector("#video");
+  init_video(video);
+} else {
+    video = new Image();
+    video.src = "data/5.png";
+};
 
 // LOADING --------------------------------------------------------------------
-
+var ready_main = false;
 var ready_cv = false;
 function on_ready_cv() {
   ready_cv = true;
@@ -47,24 +57,18 @@ cv['onRuntimeInitialized'] = () => {on_ready_cv();};
 
 var waitingId;
 function wait() {
-  var ready = false;
-  if (ready_cv) ready = true;
+  var ready = true;
+  if (!ready_cv) ready = false;
+  if (!params.testing) {
+    if (!video_is_loaded(video)) ready = false;
+  }
+  if (!ready_main) ready = false;
   if (ready) {
     clearInterval(waitingId);
     hide_loading();
     requestAnimationFrame(draw);
   }
 }
-
-// SETUP VIDEO ----------------------------------------------------------------
-var video;
-if (!params.testing) {
-  video = document.querySelector("#video");
-  init_video(video);
-} else {
-  video = new Image();
-  video.src = "data/5.png"
-};
 
 // ----------------------------------------------------------------------------
 
@@ -172,6 +176,8 @@ var pixels = new Uint8Array(mask_size.w * mask_size.h * 4);
 function grabPixels() {
   gl.readPixels(0, 0, mask_size.w, mask_size.h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 }
+
+ready_main = true;
 
 // ----------------------------------------------------------------------------
 

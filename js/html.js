@@ -16,8 +16,10 @@ async function init_video(video) {
 }
 
 function no_video(video) {
-  video.src = "data/test2.mov";
-  video.load();
+  alert("Unable to access camera :(");
+  window.location.href = "fallback.html";
+  // video.src = "data/test2.mov";
+  // video.load();
 }
 
 function hide_loading() {
