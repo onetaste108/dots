@@ -18,7 +18,7 @@ var params = {
   maxa: 10000,
   draw_poster: true,
   show_detecton: true,
-  show_corners: true,
+  show_corners: false,
   show_mask: false,
   testing: false,
   test_rotation: false,
