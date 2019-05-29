@@ -21,7 +21,7 @@ var params = {
   show_corners: false,
   show_mask: false,
   testing: false,
-  test_rotation: true,
+  test_rotation: false,
   test_matrix: true,
   redirect: true
 };
