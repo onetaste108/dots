@@ -256,6 +256,13 @@ function load_posters(gl, pd) {
   pts.push(pt6);
   pimgs.push(pimg6);
 
+  var pt7 = twgl.createTexture(gl, {width: 100, height: 100});
+  var pimg7 = new Image();
+  pimg7.onload = () => { set_img(gl, pt7, pimg7) };
+  pimg7.src = pd[6].hidden;
+  pts.push(pt7);
+  pimgs.push(pimg7);
+
   return [pts, pimgs];
 }
 

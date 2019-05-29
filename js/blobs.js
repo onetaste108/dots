@@ -211,6 +211,28 @@ function detectCorners(blobs, pId) {
     rl = rl.slice(0,1);
     corners.push(...rl);
   }
+  if (pId == 6) {
+    // LL
+    var ll = Array.from(nb);
+    ll.sort((a,b)=>{return dist({x:-1,y:2},a)-dist({x:-1,y:2},b);});
+    ll = ll.slice(0,1);
+    corners.push(...ll);
+    // LU
+    var lu = Array.from(nb);
+    lu.sort((a,b)=>{return dist({x:-1,y:-1},a)-dist({x:-1,y:-1},b);});
+    lu = lu.slice(0,1);
+    corners.push(...lu);
+    // RU
+    var ru = Array.from(nb);
+    ru.sort((a,b)=>{return dist({x:2,y:-1},a)-dist({x:2,y:-1},b);});
+    ru = ru.slice(0,1);
+    corners.push(...ru);
+    // LU
+    var rl = Array.from(nb);
+    rl.sort((a,b)=>{return dist({x:2,y:2},a)-dist({x:2,y:2},b);});
+    rl = rl.slice(0,1);
+    corners.push(...rl);
+  }
   return denormblobs(corners,nvals);
 }
 
@@ -218,8 +240,10 @@ function get_poster_id(blobs) {
   var postern;
   if (blobs.length <= 3 || blobs.length > 55) {
     postern = -1;
-  } else if (blobs.length < 10) {
+  } else if (blobs.length < 8) {
 		postern = 3;  // 6
+  } else if (blobs.length < 13) {
+		postern = 6;  // 10
   } else if (blobs.length < 17) {
 		postern = 4;  // 15
   } else if (blobs.length < 21) {

@@ -21,7 +21,7 @@ var params = {
   show_corners: false,
   show_mask: false,
   testing: false,
-  test_rotation: false,
+  test_rotation: true,
   test_matrix: true,
   redirect: true
 };
@@ -42,7 +42,7 @@ if (!params.testing) {
   init_video(video);
 } else {
     video = new Image();
-    video.src = "data/5.png";
+    video.src = "data/7.png";
 };
 
 // LOADING --------------------------------------------------------------------
